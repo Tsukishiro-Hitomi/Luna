@@ -32,10 +32,12 @@ from typing import Optional, Sequence
 
 from dotenv import load_dotenv
 
+from agent import profile
 from agent.config import Config
 from agent.sandbox import task_sandbox
 from agent.loop import run_agent
 from eval.run_bench import discover_tasks, run_bench, render_scorecard
+from eval.run_repo import run_repo
 
 
 # 任务集根目录默认值（§9.1；discover_tasks 会跳过其中的 fixture/）。
@@ -125,6 +127,29 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Enable embedding retrieval (V8): prepend relevant code to the first message.",
     )
+    # —— run（v2）：指向真实 git 仓库，以其失败的测试为目标修到绿 ——
+    p_run = sub.add_parser(
+        "run",
+        help="Point the agent at a real git repo with failing tests and fix them to green.",
+    )
+    p_run.add_argument("repo_path", help="Target git repo root (must be the repo root, clean tree).")
+    p_run.add_argument("task", nargs="?", default=None,
+                       help="Optional natural-language context (does NOT affect the oracle).")
+    p_run.add_argument("--test-cmd", metavar="CMD",
+                       help="Generic escape hatch: run this literal command, judge by exit code only "
+                            "(no per-test verdict/regression). Default: pytest mode.")
+    p_run.add_argument("--python", metavar="INTERP",
+                       help="Interpreter for pytest (target repo's venv). Default: <repo>/.venv if present, else this python.")
+    p_run.add_argument("--target", action="append", metavar="NODE_ID", default=None,
+                       help="Narrow the oracle to specific failing node id(s); repeatable.")
+    p_run.add_argument("--branch", metavar="NAME", help="Work branch name (default: fixpoint/fix-<ts>).")
+    p_run.add_argument("--allow-dirty", action="store_true", help="Proceed on a dirty tree (never resets your changes).")
+    p_run.add_argument("--name", metavar="NAME", help="Remember your name for the greeting.")
+    p_run.add_argument("--model", metavar="ID", help="Override model.")
+    p_run.add_argument("--max-steps", type=int, metavar="N", help="Raise the step guardrail (real repos need more).")
+    p_run.add_argument("--budget", type=float, metavar="USD", help="Raise the per-run cost budget.")
+    p_run.add_argument("--timeout", type=int, metavar="SEC", help="Test timeout (run_tests + judge).")
+    p_run.add_argument("--stream", action="store_true", help="Stream model text live (cost becomes a lower bound).")
     return parser
 
 
@@ -235,6 +260,65 @@ def cmd_bench(args: argparse.Namespace, config: Config) -> int:
     return 0
 
 
+def cmd_run(args: argparse.Namespace, config: Config) -> int:
+    """执行 `run` 子命令：真实 git 仓库修红测试（v2，行为在 eval/run_repo.py）。"""
+    # 解释器：--python > <repo>/.venv/bin/python > 默认；agent 与 harness 共用同一个
+    if args.python:
+        config.test_python = args.python
+    else:
+        venv_py = os.path.join(os.path.realpath(args.repo_path), ".venv", "bin", "python")
+        if os.path.exists(venv_py):
+            config.test_python = venv_py
+    if args.test_cmd:
+        config.test_cmd = args.test_cmd
+    if args.model:
+        config.model = args.model
+    if args.max_steps is not None:
+        config.max_steps = args.max_steps
+    if args.budget is not None:
+        config.cost_budget_usd = args.budget
+    if args.timeout is not None:
+        config.run_tests_timeout_s = args.timeout
+        config.judge_timeout_s = args.timeout
+    config.stream = bool(args.stream)  # run 默认非流式（成本准确、预算护栏有效）
+
+    on_text = (lambda t: print(t, end="", flush=True)) if config.stream else None
+    print(f"▶ run {args.repo_path}")
+    r = run_repo(args.repo_path, config, task=args.task, targets=args.target,
+                 allow_dirty=args.allow_dirty, branch=args.branch, on_text=on_text)
+
+    if r.status in ("not_git_repo", "not_repo_root", "dirty_tree", "mid_operation",
+                    "no_tests_collected", "baseline_error"):
+        print(f"✗ {r.status}：{r.message}")
+        return 1
+
+    s = r.baseline_summary
+    print(f"\n基线：{s.get('passed', 0)} passed / {s.get('failed', 0)} failed / "
+          f"{s.get('error', 0)} error / {s.get('skipped', 0)} skipped（mode={r.mode}）")
+    if r.status == "no_failing_tests":
+        print(f"→ {r.message}")
+        return 0
+
+    short = lambda ts: "、".join(t.split("::")[-1] for t in ts[:8]) + ("…" if len(ts) > 8 else "")
+    print(f"目标（{len(r.target_tests)}）：{short(r.target_tests)}")
+    if config.stream:
+        print()  # 流式输出后补一个换行
+    print(f"分支：{r.branch}（基线 {r.base_ref or 'detached'} @ {(r.base_sha or '?')[:8]}）")
+    print(f"步数 {r.steps} · tokens {r.input_tokens}/{r.output_tokens} · "
+          f"cost ${r.cost_usd:.4f} · {r.wall_s:.1f}s · stop={r.stop_reason}")
+    print(("✅ SOLVED" if r.solved else "❌ NOT SOLVED") +
+          f"  fixed={len(r.fixed)}/{len(r.target_tests)}  regressions={len(r.regressions)}")
+    if r.regressions:
+        print(f"  回归：{short(r.regressions)}")
+    if r.still_failing:
+        print(f"  仍红：{short(r.still_failing)}")
+    n_files = sum(1 for ln in r.diff.splitlines() if ln.startswith("+++ "))
+    print(f"\n改动文件：{n_files}；未跟踪：{len(r.untracked)}")
+    print(f"查看改动：git -C {args.repo_path} diff {(r.base_sha or 'HEAD')[:8]}")
+    print(f"丢弃改动：git -C {args.repo_path} checkout . && git -C {args.repo_path} clean -fd（先加 --dry-run）")
+    return 0 if r.solved else 1
+
+
 def main(argv: Optional[Sequence[str]] = None) -> int:
     """CLI 主入口：接线 + 分发（§14.4 / §8.1）。
 
@@ -254,12 +338,17 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     """
     load_dotenv()
     config = Config.from_env()
-    # 流式在各子命令内按需设置：solve 开（实时显示）、bench 关（成本记账准确）。
+    # 流式在各子命令内按需设置：solve 开（实时显示）、bench/run 关（成本记账准确）。
     args = build_parser().parse_args(argv)
+    if getattr(args, "name", None):        # run --name：先记名字，问候才用得上
+        profile.set_name(args.name)
+    print(profile.greeting(profile.resolve_name()))   # 所有子命令统一问候一次（仅终端，不进产物）
     if args.command == "solve":
         return cmd_solve(args, config)
     if args.command == "bench":
         return cmd_bench(args, config)
+    if args.command == "run":
+        return cmd_run(args, config)
     return 1
 
 

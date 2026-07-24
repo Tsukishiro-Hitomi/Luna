@@ -32,5 +32,6 @@
 |---|---|:--:|:--:|:--:|--:|--:|--:|
 | baseline | claude-opus-4.8 | False | False | 100% | 6.3 | 0.1202 | 1.44 |
 | haiku | claude-haiku-4.5 | False | False | 100% | 6.8 | 0.0360 | 0.43 |
+| retrieval | claude-opus-4.8 | True | False | 100% | 5.8 | 0.1787 | 2.14 |
 
 > 小任务集 + 采样随机性下，条件间的小差异可能是噪声；n_attempts=1。

@@ -56,6 +56,10 @@ class Config:
     max_search_hits: int = 100
     max_test_output: int = 4000
 
+    # —— v2：真实仓库支持（默认 None → 对 fixture solve/bench 逐字节无影响）——
+    test_cmd: Optional[str] = None      # generic 逃生舱：逐字命令，rc-only 粗判（非 pytest 仓库）
+    test_python: Optional[str] = None   # pytest 模式解释器；None → sys.executable
+
     # —— 成本核算：模型 id -> (输入价, 输出价)，美元/百万 token（唯一价格表）——
     # 默认取第一方参考价（Opus 4.8 = $5/$25、Haiku 4.5 = $1/$5 每百万 token）；
     # reviewer 需按聚合网关实际计费校准。未知模型缺表 -> cost_of 返回 None
@@ -97,6 +101,9 @@ class Config:
         timeout = os.environ.get("RUN_TESTS_TIMEOUT")
         if timeout is not None:
             overrides["run_tests_timeout_s"] = int(timeout)
+        test_cmd = os.environ.get("FIXPOINT_TEST_CMD")
+        if test_cmd is not None:
+            overrides["test_cmd"] = test_cmd
         return cls(**overrides)
 
 

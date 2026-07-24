@@ -252,6 +252,7 @@ def run_agent(workdir: str, task: str, config: Optional[Config] = None, on_text=
                 tu.name, tu.input, workdir,
                 test_timeout=config.run_tests_timeout_s,
                 max_result_chars=config.max_tool_result_chars,
+                test_cmd=config.test_cmd, test_python=config.test_python,
             )
             tool_calls.append(ToolCall(name=tu.name, input=tu.input, result_preview=out[:200]))
             tool_results.append({

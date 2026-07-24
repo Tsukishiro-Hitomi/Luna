@@ -35,8 +35,27 @@ from typing import Optional
 from agent import sandbox
 import os
 import re
+import shlex
 import subprocess
 import sys
+
+# v2：跨工具共享的噪声目录——真实仓库可能极大，list_dir/search 一律跳过，避免读满内存
+NOISE_DIRS = {
+    "__pycache__", ".pytest_cache", ".mypy_cache", ".tox", ".git",
+    ".venv", "venv", "env", "node_modules", "dist", "build", ".eggs",
+    ".idea", ".vscode", "htmlcov", ".next", "target",
+}
+_BINARY_EXTS = {
+    ".pyc", ".so", ".o", ".a", ".dylib", ".dll", ".exe", ".bin", ".zip",
+    ".gz", ".tar", ".whl", ".png", ".jpg", ".jpeg", ".gif", ".pdf", ".ico",
+    ".woff", ".woff2", ".ttf", ".mp4", ".mp3", ".db", ".sqlite",
+}
+
+
+def _in_git_dir(workdir: str, abs_path: str) -> bool:
+    """abs_path 是否落在仓库的 .git/ 内——v2 真实仓库里禁止工具改写 git 元数据。"""
+    rel = os.path.relpath(abs_path, os.path.realpath(workdir))
+    return rel == ".git" or rel.startswith(".git" + os.sep)
 
 
 # ---------------------------------------------------------------------------
@@ -218,10 +237,9 @@ def list_dir(workdir: str, path: str = ".") -> str:
     if not os.path.isdir(abs_path):
         return f"错误：不是目录：{path}"
     
-    NOISE = {"__pycache__", ".pytest_cache", "*.pyc", ".git"}
     names = [
         n for n in os.listdir(abs_path)
-        if n not in NOISE and not n.endswith(".pyc")
+        if n not in NOISE_DIRS and not n.endswith(".pyc")
     ]
     names.sort()
 
@@ -344,26 +362,27 @@ def search(
     root = os.path.realpath(workdir)
     search_path = sandbox.resolve_in_workdir(workdir, path)
 
-    NOISE = {"__pycache__", ".pytest_cache", ".git"}
     files = []
     if os.path.isfile(search_path):
         files.append(search_path)                          # path 指向单个文件
     else:
         for dirpath, dirnames, filenames in os.walk(search_path):
-            dirnames[:] = sorted(d for d in dirnames if d not in NOISE)  # 剪枝 + 排序
+            dirnames[:] = sorted(d for d in dirnames if d not in NOISE_DIRS)  # 剪枝 + 排序
             for name in sorted(filenames):
-                if name.endswith(".pyc"):
-                    continue
+                if os.path.splitext(name)[1] in _BINARY_EXTS:
+                    continue                               # 跳过二进制/编译产物
                 files.append(os.path.join(dirpath, name))
 
     hits = []
     truncated = False
     for full in files:
         try:
+            if os.path.getsize(full) > 1_000_000:          # 跳过 >1MB 的大文件（真实仓库防 OOM）
+                continue
             with open(full, encoding="utf-8") as f:
                 lines = f.read().splitlines()
-        except UnicodeDecodeError:
-            continue                                        
+        except (UnicodeDecodeError, OSError):
+            continue
         rel = os.path.relpath(full, root)                   
         for lineno, line in enumerate(lines, start=1):      
             if query in line:                               
@@ -411,6 +430,8 @@ def edit_file(workdir: str, path: str, old_string: str, new_string: str) -> str:
     if old_string == new_string:
         return "错误：old_string 与 new_string 相同，无需修改。"
     abs_path = sandbox.resolve_in_workdir(workdir, path)
+    if _in_git_dir(workdir, abs_path):
+        return f"错误：拒绝写入 .git/ 内的文件：{path}"
     if not os.path.exists(abs_path):
         return f"错误：文件不存在：{abs_path} (如需新建请用 write_file)"
     if not os.path.isfile(abs_path):
@@ -460,6 +481,8 @@ def write_file(workdir: str, path: str, content: str) -> str:
     ``f"已{创建|覆盖} <path>（{字节数} 字节，{行数} 行）。"``（``<path>`` 为 workdir 相对形式）。
     """
     abs_path = sandbox.resolve_in_workdir(workdir, path)
+    if _in_git_dir(workdir, abs_path):
+        return f"错误：拒绝写入 .git/ 内的文件：{path}"
     if os.path.isdir(abs_path):
         return f"错误：目标是一个目录：{abs_path}"
     existed = os.path.exists(abs_path)
@@ -475,8 +498,13 @@ def run_tests(
     path: Optional[str] = None,
     timeout: int = 60,
     max_test_output: int = 4000,
+    test_cmd: Optional[str] = None,
+    test_python: Optional[str] = None,
 ) -> str:
-    """在 workspace 内跑 pytest 并回报 PASS/FAIL（DESIGN §6.2 工具 6）。
+    """在 workspace 内跑测试并回报 PASS/FAIL（DESIGN §6.2 工具 6；v2 加 test_cmd/test_python）。
+
+    v2：``test_cmd`` 非空 → generic 逃生舱（逐字命令、仅按退出码粗判，用于非 pytest 仓库）；
+    否则 pytest 模式，解释器取 ``test_python or sys.executable``（真实仓库须用其自己的 venv）。
 
     ``timeout`` 由调用方（``guarded_execute``）从 ``config.run_tests_timeout_s``（默认 60）注入；
     ``max_test_output`` 默认 4000，对齐 ``config.max_test_output``。二者均不在 handler 内硬编码语义。
@@ -539,22 +567,43 @@ def run_tests(
     - 有失败：多加「失败用例：」段（点名 node id + 一句原因）与
       「失败详情（--tb=short，已截断/未截断）：」段。
     """
+    env = {**os.environ, "PYTHONDONTWRITEBYTECODE": "1"}  # 不写 __pycache__ 弄脏工作树
+
+    # v2 generic 逃生舱：逐字命令，仅按退出码粗判（无逐用例结果 → 无回归/反作弊定位）
+    if test_cmd:
+        try:
+            gr = subprocess.run(
+                shlex.split(test_cmd), cwd=workdir, capture_output=True,
+                text=True, timeout=timeout, env=env,
+            )
+        except subprocess.TimeoutExpired as e:
+            partial = e.stdout or ""
+            if isinstance(partial, bytes):
+                partial = partial.decode("utf-8", "replace")
+            return f"错误：测试运行超时（>{timeout}s），已终止。\n部分输出：\n{partial[-1000:]}"
+        tail = ((gr.stdout or "") + (gr.stderr or ""))[-max_test_output:]
+        verdict = "PASS" if gr.returncode == 0 else "FAIL"
+        return (f"[run_tests] 命令：{test_cmd}\n结果：{verdict}（returncode={gr.returncode}，"
+                f"仅按退出码判定）\n输出（尾部）：\n{tail}")
+
     # 1. path 校验：只对 "::" 之前的文件部分做路径封闭（越界抛 PathEscape，交给护栏）。
     if path:
         file_part = path.split("::", 1)[0]
         sandbox.resolve_in_workdir(workdir, file_part)
 
-    # 2. 组命令、在 workdir 里跑 pytest。
+    # 2. 组命令、在 workdir 里跑 pytest（解释器可注入=目标仓库自己的 venv；
+    #    --continue-on-collection-errors：一个无关文件收集失败不整轮中断）。
     cmd = [
-        sys.executable, "-m", "pytest",
+        test_python or sys.executable, "-m", "pytest",
         "-q", "--tb=short", "-rfE", "--color=no",
+        "--continue-on-collection-errors",
         "-p", "no:cacheprovider",
     ]
     if path:
         cmd.append(path)
     try:
         result = subprocess.run(
-            cmd, cwd=workdir, capture_output=True, text=True, timeout=timeout
+            cmd, cwd=workdir, capture_output=True, text=True, timeout=timeout, env=env
         )
     except subprocess.TimeoutExpired as e:
         partial = e.stdout or ""
@@ -619,6 +668,8 @@ def guarded_execute(
     *,
     test_timeout: int,
     max_result_chars: int,
+    test_cmd: Optional[str] = None,
+    test_python: Optional[str] = None,
 ) -> str:
     """loop 唯一调用的执行入口：把路径越界与任何异常都收敛成字符串（DESIGN §6.3）。
 
@@ -665,6 +716,8 @@ def guarded_execute(
     kwargs = dict(tool_input)
     if tool_name == "run_tests":
         kwargs["timeout"] = test_timeout
+        kwargs["test_cmd"] = test_cmd
+        kwargs["test_python"] = test_python
 
     # 3. 异常兜底（由具体到兜底），保证只返回 str、永不抛。
     try:

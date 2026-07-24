@@ -78,13 +78,19 @@ independently re-running pytest against the pristine tests — the model never g
 |------------------------------------|:-------------:|:---------:|:--------:|
 | opus-4.8 (baseline)                | 100% (12/12)  |    6.3    |  $0.120  |
 | haiku-4.5 (weaker / cheaper brain) | 100% (12/12)  |    6.8    |  $0.036  |
-| opus-4.8 + embedding retrieval     | _TODO (V8)_   |  _TODO_   |  _TODO_  |
-| opus-4.8 + self-correction         | _TODO_        |  _TODO_   |  _TODO_  |
+| opus-4.8 + embedding retrieval     | 100% (12/12)  |    5.8    |  $0.179  |
 
-> On this deliberately simple task set (single-function bugs, clear failing tests) **both
-> models solve every task**, so the benchmark doesn't separate them on solve-rate (a ceiling
-> effect). The real gap is efficiency — **haiku is ~3× cheaper** at a slightly higher step
-> count. Separating models on solve-rate would need harder tasks (planned v2).
+> On this deliberately simple task set all three variants solve every task (a ceiling
+> effect), so the signal is **efficiency, not solve-rate**:
+> - **haiku** matches opus at **~3× lower cost** (a couple more steps) — the benchmark
+>   doesn't punish the weaker model here.
+> - **embedding retrieval** cuts steps (6.3 → 5.8; e.g. the division-stub task dropped
+>   8 → 4 steps, since retrieval hands the agent the exact broken function) but *raises*
+>   cost (~+50%): the injected code is re-sent in every turn's history (MVP doesn't trim),
+>   so the step savings don't pay for the token overhead — yet. Trimming history or gating
+>   injection would flip that.
+>
+> Separating variants on solve-rate would need harder tasks (planned v2). n_attempts=1.
 
 ## How it works
 

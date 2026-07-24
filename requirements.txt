@@ -6,6 +6,6 @@ anthropic==0.117.0        # 官方 SDK；经聚合网关调用，tool use 已验
 python-dotenv==1.2.1      # 启动时把 .env 读进环境变量
 pytest==8.4.2             # run_tests 跑它；也用于 tests/ 里 agent 自身工具的单测
 
-# --- v1: embedding code retrieval（V8 落地时取消注释并 pin 真实版本）---
-# 注意：会传递性拉入 torch + transformers（体积大，macOS 首次安装较慢）
-# sentence-transformers==x.y.z   # 加载 bge-small-en-v1.5 做代码检索（英文语料）
+# --- v1: embedding code retrieval（V8；MVP-only 用户可不装）---
+# 注意：会传递性拉入 torch + transformers（体积大）；首次 encode 会联网下 bge-small-en 模型
+sentence-transformers==5.1.2   # 加载 bge-small-en-v1.5 做代码检索（英文语料，不走网关）

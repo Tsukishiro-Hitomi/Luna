@@ -188,8 +188,13 @@ def capture_baseline(fixture_dir: str) -> Dict[str, str]:
         return run_pytest(wd, 60)
 
 
-def run_pytest(workspace: str, timeout_s: int) -> Dict[str, str]:
-    """在给定工作副本上独立复跑全量 pytest，返回逐用例判定（§10.4）。
+def run_pytest(workspace: str, timeout_s: int, *,
+               python: Optional[str] = None, scope: Optional[str] = "tests/") -> Dict[str, str]:
+    """在给定工作副本上独立复跑 pytest，返回逐用例判定（§10.4；v2 加 python/scope）。
+
+    v2：``python`` 指定解释器（真实仓库用其自己的 venv）；``scope`` 为 None 时不加路径，
+    让 pytest 按 rootdir/testpaths 自行发现（真实仓库测试未必在 ``tests/``）。默认参数
+    保持 fixture bench 行为逐字节不变。
 
     契约：
       · 以 `workspace` 为 cwd，用 `sys.executable -m pytest`（与 §6 工具一致，
@@ -219,20 +224,22 @@ def run_pytest(workspace: str, timeout_s: int) -> Dict[str, str]:
     """
     fd, xml_path = tempfile.mkstemp(suffix=".xml")
     os.close(fd)
+    cmd = [python or sys.executable, "-m", "pytest",
+           "-p", "no:cacheprovider", "--continue-on-collection-errors",
+           "--junitxml", xml_path, "-q"]
+    if scope:
+        cmd.append(scope)
     try:
         subprocess.run(
-            [sys.executable, "-m", "pytest", "tests/", "-p", "no:cacheprovider",
-             "--junitxml", xml_path, "-q"],
-            cwd=workspace, capture_output=True, text=True, timeout=timeout_s, env=_PYENV,
+            cmd, cwd=workspace, capture_output=True, text=True, timeout=timeout_s, env=_PYENV,
         )
         outcomes: Dict[str, str] = {}
         for tc in ET.parse(xml_path).iter("testcase"):
-            # junit 只给 classname（点分、无 .py）+ name；还原成 node id
-            # "tests.test_parser" + "test_x" -> "tests/test_parser.py::test_x"
-            classname, name = tc.get("classname"), tc.get("name")
-            if not classname or not name:
+            name = tc.get("name")
+            # 优先用 junit 的 file 属性（已是仓库相对路径）；缺失才由 classname 点分还原
+            file = tc.get("file") or ((tc.get("classname") or "").replace(".", "/") + ".py")
+            if not name or not file:
                 continue
-            file = classname.replace(".", "/") + ".py"
             if tc.find("failure") is not None:
                 oc = "failed"
             elif tc.find("error") is not None:
