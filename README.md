@@ -57,6 +57,10 @@ python cli.py solve 001_mul_precedence
 
 # run the whole benchmark → writes eval/scorecard.md
 python cli.py bench
+
+# —— v2: point it at YOUR git repo that has failing tests ——
+python cli.py run /path/to/repo                 # locate + fix on a new branch, print the diff
+python cli.py run /path/to/repo --python /path/to/repo/.venv/bin/python   # use the repo's own venv
 ```
 
 ## Results
@@ -90,7 +94,7 @@ independently re-running pytest against the pristine tests — the model never g
 >   so the step savings don't pay for the token overhead — yet. Trimming history or gating
 >   injection would flip that.
 >
-> Separating variants on solve-rate would need harder tasks (planned v2). n_attempts=1.
+> Separating variants on solve-rate would need a harder task set (future work). n_attempts=1.
 
 ## How it works
 
@@ -115,25 +119,52 @@ independently re-running pytest against the pristine tests — the model never g
   previously-green test newly fails (regression check). The model is never
   trusted to grade itself.
 
+## Run on a real repo (v2)
+
+`python cli.py run <repo>` points the same agent at **any git repo that has failing
+tests** and fixes them to green — the fixture task set, generalized to real code:
+
+- **Oracle = the failing tests.** It runs your suite, takes the currently-failing tests
+  as the goal, edits the source, and re-runs. *Solved* = those tests pass **and** no
+  previously-green test regresses (the same harness judge as the benchmark). It never
+  hunts for bugs without a failing test to prove them.
+- **Safe by default.** Requires a clean tree, works on a fresh `fixpoint/fix-<ts>`
+  branch, **never commits or resets your work**, and prints the diff for you to keep or
+  discard. Refuses non-git dirs, subdirectories, and mid-merge/rebase states.
+- **Uses your repo's interpreter** (`--python`, or an auto-detected `<repo>/.venv`) so the
+  target's own dependencies are visible to pytest.
+- **pytest by default** (per-test verdicts + regression detection); other runners work
+  via `--test-cmd "…"`, judged by exit code only.
+
+```bash
+python cli.py run ~/proj --target tests/test_x.py::test_y     # narrow the goal
+python cli.py run ~/proj --test-cmd "make test" --budget 2.0 --max-steps 60
+```
+
 ## Project layout
 
 ```text
-agent/    loop, tools, sandbox, llm, config
+agent/    loop, tools, sandbox, llm, config, profile
 tasks/    fixture/ (pristine lib + tests) + NNN_*/ (task.json + break.patch)
-eval/     run_bench.py, scorecard.md
-tests/    unit tests for the agent's own tools
-cli.py    solve / bench entrypoints
+eval/     run_bench.py (benchmark), run_repo.py (v2 real-repo runner), scorecard.md
+tests/    unit tests for the agent's own tools + profile / run_repo
+cli.py    solve / bench / run entrypoints
 ```
 
 ## Limitations & non-goals
 
-- Single fixture domain (a mini arithmetic-expression evaluator) — not a general
-  code agent yet; generalizing to real repos with failing tests is the planned v2.
+- **Needs a failing test as the oracle.** It fixes red tests to green; it does *not*
+  proactively hunt for bugs when nothing is failing (no oracle → unverifiable).
+- **Structured verdicts are pytest-only.** Other runners work via `--test-cmd` but are
+  judged by exit code alone (no per-test detail / regression breakdown).
 - Edits are exact string replacements (`edit_file`), not fuzzy / semantic patches.
-- Test runner is pytest-only; `run_tests` parses its output.
-- Cost / latency depend on the aggregation gateway; token accounting is an estimate.
+- Real-repo safety is git-based (clean tree + branch + diff), **not** a container —
+  run it only on repos you trust (the test command executes arbitrary code).
+- Cost / latency depend on the aggregation gateway; it can't report output tokens under
+  streaming, so `run` / `bench` use non-streaming for accurate cost.
 - Not bit-reproducible: the LLM samples, so steps / cost vary run to run.
-- (v1) embedding retrieval will be English-only (`bge-small-en`).
+- Embedding retrieval (v1) is English-only (`bge-small-en`); its benefit here is modest
+  (see Ablations).
 
 ## License
 
