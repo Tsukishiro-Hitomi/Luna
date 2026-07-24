@@ -141,6 +141,21 @@ python cli.py run ~/proj --target tests/test_x.py::test_y     # narrow the goal
 python cli.py run ~/proj --test-cmd "make test" --budget 2.0 --max-steps 60
 ```
 
+### Chat UI
+
+A minimal chat frontend over the same runner — paste a repo path, it fixes the red
+tests and replies with the diff:
+
+```bash
+python serve.py            # → http://127.0.0.1:8000  (Ctrl-C to stop)
+```
+
+Stdlib `http.server`, no extra deps: it serves one chat page and a `POST /run`
+endpoint that calls the exact same `run_repo` pipeline as the CLI. It greets you by
+name (`agent/profile.py`) and shows baseline → fixed/regressions → branch → cost →
+diff per reply. **Local only** — it binds `127.0.0.1` and runs the target repo's
+tests (arbitrary code), so point it only at repos you trust.
+
 ## Project layout
 
 ```text
@@ -149,6 +164,7 @@ tasks/    fixture/ (pristine lib + tests) + NNN_*/ (task.json + break.patch)
 eval/     run_bench.py (benchmark), run_repo.py (v2 real-repo runner), scorecard.md
 tests/    unit tests for the agent's own tools + profile / run_repo
 cli.py    solve / bench / run entrypoints
+serve.py  local chat UI (http.server → run_repo)
 ```
 
 ## Limitations & non-goals
