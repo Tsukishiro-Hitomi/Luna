@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang='zh'><head><meta charset='utf-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1'>
+<title>卢娜 · 代码助手</title>
+<link rel='icon' href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20100%20100'%3E%3Ctext%20y='.9em'%20font-size='90'%3E🐾%3C/text%3E%3C/svg%3E">
+<link rel='stylesheet' href='/style.css'>
+</head>
+<body>
+  <div class='shell'>
+    <aside class='side'>
+      <div class='portrait' data-cat></div>
+      <div class='sidename'>卢娜</div>
+      <div class='role'>你的专属代码助手</div>
+      <div class='quote'>“把失败的测试交给我，<br>一只一只帮你捉好喵～”</div>
+    </aside>
+    <main class='app'>
+      <header class='bar'><div class='ava' data-cat></div><div><b>卢娜</b></div></header>
+      <div id='log'></div>
+      <form id='f'>
+        <div class='inbox'>
+          <input id='msg' placeholder='告诉卢娜仓库的绝对路径～' autocomplete='off' required>
+          <button id='send' class='send' title='发送'>
+            <svg viewBox='0 0 24 24'><path d='M12 3l8 8h-5v9h-6v-9H4z'/></svg>
+          </button>
+        </div>
+        <div class='tip'>卢娜只会新开分支来修，绝不碰主人的提交喵～</div>
+      </form>
+    </main>
+  </div>
+
+  <template id='cattpl'><svg viewBox='0 0 220 220' xmlns='http://www.w3.org/2000/svg'>
+   <defs>
+    <linearGradient id='hairG' x1='0' y1='0' x2='0' y2='1'>
+     <stop offset='0' stop-color='#ffd9ea'/><stop offset='1' stop-color='#f39ccb'/></linearGradient>
+    <linearGradient id='eyeG' x1='0' y1='0' x2='0' y2='1'>
+     <stop offset='0' stop-color='#b8a7ff'/><stop offset='.5' stop-color='#8b5cf6'/><stop offset='1' stop-color='#6023c0'/></linearGradient>
+    <radialGradient id='blushG' cx='.5' cy='.5' r='.5'>
+     <stop offset='0' stop-color='#ff8fbd'/><stop offset='1' stop-color='#ff8fbd00'/></radialGradient>
+   </defs>
+   <path d='M34 128 C24 66 72 30 110 30 C148 30 196 66 186 128 C192 182 156 206 110 206 C64 206 28 182 34 128 Z' fill='url(#hairG)'/>
+   <path d='M48 66 L58 14 L96 50 Z' fill='url(#hairG)'/>
+   <path d='M172 66 L162 14 L124 50 Z' fill='url(#hairG)'/>
+   <path d='M58 58 L64 30 L84 50 Z' fill='#ff9ec7'/>
+   <path d='M162 58 L156 30 L136 50 Z' fill='#ff9ec7'/>
+   <path d='M56 118 C56 82 80 62 110 62 C140 62 164 82 164 118 C164 152 140 176 110 176 C80 176 56 152 56 118 Z' fill='#ffe7d8'/>
+   <path d='M54 108 C56 74 82 54 110 54 C138 54 164 74 166 108 C150 92 140 92 130 98 C126 78 120 76 110 76 C100 76 94 78 90 98 C80 92 70 92 54 108 Z' fill='url(#hairG)'/>
+   <path d='M56 108 C50 130 52 150 58 166 C46 150 44 128 50 110 Z' fill='url(#hairG)'/>
+   <path d='M164 108 C170 130 168 150 162 166 C174 150 176 128 170 110 Z' fill='url(#hairG)'/>
+   <circle cx='80' cy='140' r='13' fill='url(#blushG)'/>
+   <circle cx='140' cy='140' r='13' fill='url(#blushG)'/>
+   <ellipse cx='90' cy='124' rx='15' ry='19' fill='#fff'/>
+   <ellipse cx='130' cy='124' rx='15' ry='19' fill='#fff'/>
+   <ellipse cx='91' cy='126' rx='11.5' ry='15.5' fill='url(#eyeG)'/>
+   <ellipse cx='129' cy='126' rx='11.5' ry='15.5' fill='url(#eyeG)'/>
+   <circle cx='86' cy='120' r='4.5' fill='#fff'/>
+   <circle cx='125' cy='120' r='4.5' fill='#fff'/>
+   <circle cx='95' cy='131' r='2.4' fill='#fff' opacity='.85'/>
+   <circle cx='133' cy='131' r='2.4' fill='#fff' opacity='.85'/>
+   <path d='M74 108 Q90 100 106 108' stroke='#7a3b5e' stroke-width='3.4' fill='none' stroke-linecap='round'/>
+   <path d='M114 108 Q130 100 146 108' stroke='#7a3b5e' stroke-width='3.4' fill='none' stroke-linecap='round'/>
+   <path d='M104 150 q3 4 6 0 q3 4 6 0' stroke='#d06a89' stroke-width='2.4' fill='none' stroke-linecap='round'/>
+   <g stroke='#f0a7cd' stroke-width='1.7' stroke-linecap='round' opacity='.75'>
+    <path d='M52 132 H74'/><path d='M52 142 H72'/><path d='M168 132 H146'/><path d='M168 142 H148'/></g>
+  </svg></template>
+
+  <script src='/app.js'></script>
+</body></html>
