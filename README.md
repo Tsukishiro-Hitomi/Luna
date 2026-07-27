@@ -1,4 +1,4 @@
-# fixpoint
+# Luna
 
 > A test-driven autonomous coding agent, built from scratch.
 > Hand it a repo and a red test suite — it locates the code, edits it, runs the
