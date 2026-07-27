@@ -1,43 +1,73 @@
-# fixpoint
+# Luna
 
-> A test-driven autonomous coding agent, built from scratch.
-> Hand it a repo and a red test suite — it locates the code, edits it, runs the
-> tests, reads the red/green, and iterates until the suite is green. Then it's
-> scored pass/fail on a controlled task set, with no self-reported results.
+> A test-driven autonomous coding agent, built from scratch — with a cat-eared face.
+> Hand it a repo and a red test suite; it locates the code, edits it, runs the tests,
+> reads the red/green, and iterates until the suite is green. Every result is scored by
+> an independent harness, so **pass@1 is an observed number, never the model's own word**.
+> Drive it from the CLI, or chat with **卢娜 (Luna)**, the catgirl assistant on the front.
 
 <!-- badges: keep to 3-4, all must be real & green -->
 ![Python](https://img.shields.io/badge/python-3.9-blue)
-![agent tests](https://img.shields.io/badge/agent%20tests-passing-brightgreen)
+![tests](https://img.shields.io/badge/tests-121%20passing-brightgreen)
 ![license](https://img.shields.io/badge/license-MIT-lightgrey)
 
 <!-- TODO(demo.gif): record 8–15s of one task going red → agent loop → green,
      save to docs/demo.gif, then uncomment the line below.
-![fixpoint solving a task](docs/demo.gif)
+![Luna solving a task](docs/demo.gif)
 -->
 
-## Why this exists
+## What it is
 
-A coding agent built from scratch: hand it a repo with failing tests and it
-locates the broken code, edits it, runs the tests, and iterates until green —
-the core loop that tools like Claude Code run, small enough to read end-to-end.
-What makes it more than a demo is measurement: every task is scored by a harness
-that independently re-runs pytest, so **pass@1 is an observed number, never the
-model's own word**.
+Luna is a coding agent built from scratch: hand it a repo with failing tests and it
+locates the broken code, edits it, runs the tests, and iterates until green — the core
+loop that tools like Claude Code run, small enough to read end-to-end. What makes it
+more than a demo is **measurement**: every task is scored by a harness that independently
+re-runs pytest and checks for regressions, so the solve-rate is observed, not claimed.
+
+Two ways in, one engine:
+
+- **CLI** (`cli.py`) — `solve` a benchmark task, `bench` the whole controlled set, or
+  `run` the agent on any real git repo with failing tests.
+- **Chat** (`serve.py` + `web/`) — a local web app where **卢娜 (Luna)**, a cat-eared code
+  assistant, takes a repo path in plain language, fixes the red tests, and replies with a
+  result card. She'll also just chat back if you say hi.
+
+Both funnel into the same agent loop and the same test-oracle scoring.
+
+## Feature tour
+
+- **Test-oracle scoring** — the model never grades itself; a separate harness re-runs
+  pytest against pristine tests and flags regressions.
+- **Real-repo mode** — point it at your own git repo; safe by default (clean-tree check,
+  fresh branch, never commits or resets your work, prints the diff).
+- **Path-confined tools** — every file op is sandboxed to the work directory; the test
+  command is the only thing that runs your code.
+- **Benchmark + ablations** — a 12-task controlled set with a reproducible scorecard
+  (model / retrieval ablations included).
+- **Streaming, retrieval, budgets** — live token streaming, optional embedding retrieval
+  to seed context, and a per-task USD cost ceiling.
+- **Chat frontend** — natural-language path extraction, persona small-talk, a time-aware
+  greeting, a polished result card, and a drop-in portrait slot — all on stdlib
+  `http.server`, no extra deps.
 
 ## Architecture
 
 ```mermaid
-flowchart LR
-    task["task.json + break.patch"] --> loop
-    subgraph agent
-      loop["agent loop"] <-->|messages + tool_use| llm["Claude (via gateway)"]
-      loop -->|tool calls| tools["tools: list_dir / read_file /\nsearch / edit_file /\nwrite_file / run_tests"]
-      tools --> sandbox["sandbox\n(path-confined workdir)"]
+flowchart TD
+    cli["cli.py<br/>solve / bench / run"]
+    web["serve.py + web/<br/>Luna chat UI"] --> backend["web_backend.py<br/>parse · route"]
+    backend -->|has a repo path| repo
+    backend -->|just chatting| chat["chat_reply<br/>(persona, cheap model)"]
+    cli --> repo["run_repo / run_bench"]
+    repo --> loop
+    subgraph agent["agent/"]
+      loop["loop.py — ReAct cycle"] <-->|messages + tool_use| llm["llm.py → Claude<br/>(via gateway)"]
+      loop -->|tool calls| tools["tools.py: list_dir / read_file / search /<br/>edit_file / write_file / run_tests"]
+      tools --> sandbox["sandbox.py<br/>(path-confined workdir)"]
     end
-    sandbox --> fx["fixture/ copy"]
     tools --> pytest["run_tests → pytest"]
-    bench["eval/run_bench.py"] --> loop
-    bench --> card["scorecard.md"]
+    repo --> judge["judge: re-run pytest,<br/>regression check"]
+    judge --> out["result card / scorecard.md"]
 ```
 
 ## Quickstart
@@ -52,15 +82,18 @@ pip install -r requirements.txt
 cp .env.example .env
 # edit .env → set ANTHROPIC_API_KEY and ANTHROPIC_BASE_URL
 
-# solve a single task (streams the loop to your terminal)
+# solve a single benchmark task (streams the loop to your terminal)
 python cli.py solve 001_mul_precedence
 
 # run the whole benchmark → writes eval/scorecard.md
 python cli.py bench
 
-# —— v2: point it at YOUR git repo that has failing tests ——
-python cli.py run /path/to/repo                 # locate + fix on a new branch, print the diff
-python cli.py run /path/to/repo --python /path/to/repo/.venv/bin/python   # use the repo's own venv
+# fix YOUR git repo that has failing tests (new branch, prints the diff)
+python cli.py run /path/to/repo
+python cli.py run /path/to/repo --python /path/to/repo/.venv/bin/python
+
+# …or chat with 卢娜 in the browser
+python serve.py            # → http://127.0.0.1:8000  (Ctrl-C to stop)
 ```
 
 ## Results
@@ -75,8 +108,6 @@ Full run: **$1.44** total · **~22 s/task** avg wall-clock. Every verdict is the
 independently re-running pytest against the pristine tests — the model never grades itself.
 
 ### Ablations
-
-<!-- baseline row is real; the others land with v1 (V8 retrieval, V9 haiku) -->
 
 | variant                            | pass@1        | avg steps | avg cost |
 |------------------------------------|:-------------:|:---------:|:--------:|
@@ -98,96 +129,133 @@ independently re-running pytest against the pristine tests — the model never g
 
 ## How it works
 
-- **The loop** (`agent/loop.py`) — a ReAct cycle: the model sees the task, calls
-  tools, observes results, iterates. Bounded by `max_steps` and a per-task USD cost
-  budget; it stops when the model quits calling tools (or a guardrail trips).
-- **The tools** (`agent/tools.py`) — `list_dir`, `read_file` (numbered lines),
-  `search` (literal grep), `edit_file` (unique-match string replace), `write_file`,
-  `run_tests` (pytest → compact PASS/FAIL). Every path is confined to the task
-  workdir by `agent/sandbox.py`; errors come back as strings, never exceptions.
-- **The task set** — a single pristine `fixture/`: a compact arithmetic-expression
-  evaluator in three stages — `tokenizer` (source → tokens), `parser` (tokens → AST
-  via recursive descent, with real operator precedence, left-associativity, and
-  unary minus), and `evaluator` (AST → number; true division, divide-by-zero
-  raises), over a shared `errors` hierarchy. The pristine library is fully green:
-  51 pytest cases across the three stages plus end-to-end integration. Each task
-  then applies a `break.patch` that breaks exactly one function, turning a known
-  subset of those tests red; the agent has to make the suite green again.
-- **Scoring** — after the agent stops, the harness restores the pristine test
-  files (so a run can't cheat by editing tests), then independently re-runs the
-  full `pytest`. A task is *solved* iff its target tests pass **and** no
-  previously-green test newly fails (regression check). The model is never
-  trusted to grade itself.
+- **The loop** (`agent/loop.py`) — a ReAct cycle: the model sees the task, calls tools,
+  observes results, iterates. Bounded by `max_steps` and a per-task USD cost budget; it
+  stops when the model quits calling tools (or a guardrail trips). Optional live streaming
+  and embedding retrieval to seed context.
+- **The tools** (`agent/tools.py`) — `list_dir`, `read_file` (numbered lines), `search`
+  (literal grep), `edit_file` (unique-match string replace), `write_file`, `run_tests`
+  (pytest → compact PASS/FAIL). Every path is confined to the work directory by
+  `agent/sandbox.py`; errors come back as strings, never exceptions.
+- **The LLM seam** (`agent/llm.py`) — one thin wrapper over the Anthropic SDK (through an
+  aggregation gateway), owning retries, streaming, and token/cost accounting. `agent/config.py`
+  is the single knob panel (model, budgets, timeouts, price table).
+- **The task set** (`tasks/fixture/`) — a compact arithmetic-expression evaluator in three
+  stages: `tokenizer` (source → tokens), `parser` (tokens → AST via recursive descent, with
+  real operator precedence, left-associativity, and unary minus), and `evaluator` (AST →
+  number; true division, divide-by-zero raises), over a shared `errors` hierarchy. Pristine,
+  it's fully green: 51 pytest cases. Each `tasks/NNN_*/` applies a `break.patch` that breaks
+  exactly one function, turning a known subset of those tests red.
+- **Scoring** (`eval/run_bench.py`) — after the agent stops, the harness restores the
+  pristine test files (so a run can't cheat by editing tests), then independently re-runs the
+  full `pytest`. A task is *solved* iff its target tests pass **and** no previously-green test
+  newly fails (regression check).
 
-## Run on a real repo (v2)
+## Run on a real repo
 
-`python cli.py run <repo>` points the same agent at **any git repo that has failing
-tests** and fixes them to green — the fixture task set, generalized to real code:
+`python cli.py run <repo>` points the same agent at **any git repo that has failing tests**
+and fixes them to green — the fixture task set, generalized to real code (via `eval/run_repo.py`):
 
-- **Oracle = the failing tests.** It runs your suite, takes the currently-failing tests
-  as the goal, edits the source, and re-runs. *Solved* = those tests pass **and** no
-  previously-green test regresses (the same harness judge as the benchmark). It never
-  hunts for bugs without a failing test to prove them.
-- **Safe by default.** Requires a clean tree, works on a fresh `fixpoint/fix-<ts>`
-  branch, **never commits or resets your work**, and prints the diff for you to keep or
-  discard. Refuses non-git dirs, subdirectories, and mid-merge/rebase states.
+- **Oracle = the failing tests.** It runs your suite, takes the currently-failing tests as
+  the goal, edits the source, and re-runs. *Solved* = those tests pass **and** no
+  previously-green test regresses. It never hunts for bugs without a failing test to prove them.
+- **Safe by default.** Requires a clean tree, works on a fresh `luna/fix-<ts>` branch,
+  **never commits or resets your work**, and prints the diff for you to keep or discard.
+  Refuses non-git dirs, subdirectories,
+  and mid-merge/rebase states. Restores any test file the agent touched before judging.
 - **Uses your repo's interpreter** (`--python`, or an auto-detected `<repo>/.venv`) so the
   target's own dependencies are visible to pytest.
-- **pytest by default** (per-test verdicts + regression detection); other runners work
-  via `--test-cmd "…"`, judged by exit code only.
+- **pytest by default** (per-test verdicts + regression detection); other runners work via
+  `--test-cmd "…"`, judged by exit code only.
 
 ```bash
 python cli.py run ~/proj --target tests/test_x.py::test_y     # narrow the goal
 python cli.py run ~/proj --test-cmd "make test" --budget 2.0 --max-steps 60
 ```
 
-### Chat UI —— 卢娜
-
-A chat frontend over the same runner — paste a repo path, she fixes the red tests
-and replies with a result card (baseline → fixed/regressions → branch → cost → diff):
+## Chat with 卢娜 (Luna)
 
 ```bash
-python serve.py            # → http://127.0.0.1:8000  (Ctrl-C to stop)
+python serve.py            # → http://127.0.0.1:8000
 ```
 
-Stdlib `http.server`, no extra deps, split by concern: **transport** (`serve.py` —
-server + routing + static files), **logic** (`web_backend.py` — parse the message,
-chat or fix, no HTTP), and **presentation** (`web/` — `index.html` / `style.css` /
-`app.js`). A message with a path goes through the exact same `run_repo` pipeline as
-the CLI and returns a result card; a message without one gets a persona chat reply
-(cheap/fast model, with a canned fallback). A time-aware greeting (client-side), a
-catgirl avatar + sidebar, and a pastel/night theme via `prefers-color-scheme`. Drop
-any image at `assets/luna.png` (or `.jpg`/`.webp`) to use your own portrait —
-otherwise the built-in SVG is used. **Local only** — it binds `127.0.0.1` and runs
-the target repo's tests (arbitrary code), so point it only at repos you trust.
+Just tell her, in plain language: *「帮我改一下 bug，仓库路径是 /path/to/repo」*. She pulls
+the path out of the sentence, runs the exact same `run_repo` pipeline as the CLI, and replies
+with a result card (baseline → fixed / regressions → branch → cost → diff). No path in your
+message? She chats back in character instead of erroring.
+
+The frontend is stdlib `http.server` with no extra deps, split by concern:
+
+- **transport** — `serve.py`: HTTP server, routing, static file serving.
+- **logic** — `web_backend.py`: `parse_message` (path extraction), `chat_reply` (persona
+  small-talk on a cheap/fast model, with a canned fallback), `run_fix` (→ `run_repo`), and
+  `handle_run` that routes between them. Pure dict-in/dict-out, so it's testable offline.
+- **presentation** — `web/`: `index.html` / `style.css` / `app.js`, plus a hand-drawn SVG
+  catgirl. A time-aware greeting (client-side), a pastel/night theme via `prefers-color-scheme`,
+  and a polished result card. Drop any image at `assets/luna.png` (`.jpg`/`.webp` too) to use
+  your own portrait — otherwise the built-in SVG is used.
+
+**Local only** — it binds `127.0.0.1` and runs the target repo's tests (arbitrary code), so
+point it only at repos you trust.
 
 ## Project layout
 
 ```text
-agent/    loop, tools, sandbox, llm, config, profile
-tasks/    fixture/ (pristine lib + tests) + NNN_*/ (task.json + break.patch)
-eval/     run_bench.py (benchmark), run_repo.py (v2 real-repo runner), scorecard.md
-tests/    unit tests for the agent's own tools + profile / run_repo
-cli.py    solve / bench / run entrypoints
-serve.py      local chat UI —— HTTP 服务器 + 路由 + 静态分发（薄入口）
+agent/            the agent itself
+  loop.py           ReAct loop (run_agent) + optional retrieval
+  tools.py          list_dir / read_file / search / edit_file / write_file / run_tests
+  sandbox.py        path confinement + per-task workspaces
+  llm.py            Anthropic-via-gateway wrapper + token/cost accounting
+  config.py         single knob panel (model, budgets, price table) + cost_of
+  profile.py        remembers your name for the CLI greeting
+tasks/            fixture/ (pristine evaluator lib + tests) + 001..012/ (task.json + break.patch)
+eval/
+  run_bench.py      the benchmark: run each task, judge, write scorecard.md
+  run_repo.py       real-repo runner (git preflight → agent → restore tests → judge)
+tests/            121 unit tests for tools / sandbox / llm / loop / config / profile / run_repo
+cli.py            solve / bench / run entrypoints
+serve.py          Luna chat UI — HTTP server + routing + static dispatch (thin)
 web_backend.py    its logic: parse message → chat_reply / run_fix (no HTTP)
-web/          its frontend: index.html + style.css + app.js
+web/              its frontend: index.html + style.css + app.js
+assets/           luna.* portrait (optional; falls back to the built-in SVG)
 ```
+
+## Configuration
+
+Credentials and knobs come from the environment (via `.env`):
+
+| variable             | purpose                                                        |
+|----------------------|----------------------------------------------------------------|
+| `ANTHROPIC_API_KEY`  | gateway key (**required**)                                     |
+| `ANTHROPIC_BASE_URL` | gateway base URL (**required**)                                |
+| `LUNA_MODEL`     | override the model id (optional; defaults to opus-4.8)         |
+| `LUNA_TEST_CMD`  | default test command for real-repo runs (optional)            |
+| `PORT`               | chat server port (optional; default `8000`)                   |
+
+Secrets are read straight from the environment and never enter `Config`, logs, or artifacts.
+
+## Testing
+
+```bash
+python -m pytest -q        # 121 tests, all offline (agent runs are monkeypatched)
+```
+
+The suite covers the tools, sandbox path-confinement, the LLM wrapper, the loop, config, the
+name profile, and the real-repo orchestrator — none of it hits the gateway.
 
 ## Limitations & non-goals
 
 - **Needs a failing test as the oracle.** It fixes red tests to green; it does *not*
   proactively hunt for bugs when nothing is failing (no oracle → unverifiable).
-- **Structured verdicts are pytest-only.** Other runners work via `--test-cmd` but are
-  judged by exit code alone (no per-test detail / regression breakdown).
+- **Structured verdicts are pytest-only.** Other runners work via `--test-cmd` but are judged
+  by exit code alone (no per-test detail / regression breakdown).
 - Edits are exact string replacements (`edit_file`), not fuzzy / semantic patches.
-- Real-repo safety is git-based (clean tree + branch + diff), **not** a container —
-  run it only on repos you trust (the test command executes arbitrary code).
+- Real-repo and chat safety is git-based (clean tree + branch + diff) and localhost-only,
+  **not** a container — run only on repos you trust (the test command executes arbitrary code).
 - Cost / latency depend on the aggregation gateway; it can't report output tokens under
   streaming, so `run` / `bench` use non-streaming for accurate cost.
 - Not bit-reproducible: the LLM samples, so steps / cost vary run to run.
-- Embedding retrieval (v1) is English-only (`bge-small-en`); its benefit here is modest
-  (see Ablations).
+- Embedding retrieval is English-only (`bge-small-en`); its benefit here is modest (see Ablations).
 
 ## License
 

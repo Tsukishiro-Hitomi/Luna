@@ -19,7 +19,30 @@ function msg(who, text){
   const b = document.createElement('div'); b.className = 'bub'; b.textContent = text;
   m.appendChild(a); m.appendChild(b); log().appendChild(m); scroll(); return b;
 }
-msg('bot', timeGreeting() + '，心瑞主人～ 我是你专属的代码助手卢娜，(=^･ω･^=)ﾉ 今天想让我帮你做点什么呢？');
+// 初次运行（还没设过名字）→ 先问怎么称呼你；设过 → 直接用名字问候。
+let pendingName = false;
+(async function init(){
+  let who;
+  try { who = await (await fetch('/whoami')).json(); }
+  catch(e){ msg('bot', timeGreeting() + '，主人～ 我是你专属的代码助手卢娜，(=^･ω･^=)ﾉ 今天想让我帮你做点什么呢？'); return; }
+  if(who && who.name){
+    msg('bot', timeGreeting() + '，' + who.name + '主人～ 我是你专属的代码助手卢娜，(=^･ω･^=)ﾉ 今天想让我帮你做点什么呢？');
+  } else {
+    pendingName = true;
+    msg('bot', '初次见面喵～ 我是你专属的代码助手卢娜 (=^･ω･^=)ﾉ 我该怎么称呼你呀？告诉我你的名字就好～');
+    const el = document.getElementById('msg');
+    el.placeholder = (who && who.suggested && who.suggested !== 'there') ? ('卢娜想知道主人的名字喵～') : '输入你的名字…';
+  }
+})();
+
+async function saveName(name){
+  let saved = name;
+  try { saved = (await (await fetch('/name', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({name})})).json()).name || name; }
+  catch(e){}
+  pendingName = false;
+  document.getElementById('msg').placeholder = '告诉卢娜仓库的绝对路径～';
+  msg('bot', timeGreeting() + '，' + saved + '主人～ 我记住你啦！(=^･ω･^=)ﾉ 有仓库要修的话，把绝对路径发我就好呀 🌸');
+}
 
 const short = t => (t||'').split('::').pop();
 function chip(label, val){ return "<span class='chip'>" + label + " <b>" + esc(val) + "</b></span>"; }
@@ -77,6 +100,7 @@ document.getElementById('f').addEventListener('submit', async function(e){
   msg('me', text);
   msgEl.value = '';
   const btn = document.getElementById('send'); btn.disabled = true; msgEl.disabled = true;
+  if(pendingName){ await saveName(text); btn.disabled = false; msgEl.disabled = false; msgEl.focus(); return; }
   const t = document.createElement('div'); t.className = 'msg bot';
   const a = document.createElement('div'); a.className = 'ava'; catFill(a);
   const b = document.createElement('div'); b.className = 'bub typing'; b.innerHTML = "<span></span><span></span><span></span>";

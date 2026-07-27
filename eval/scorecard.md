@@ -1,4 +1,4 @@
-# fixpoint scorecard
+# Luna scorecard
 
 - date: `2026-07-24T14:06:47`  ·  commit: `e2f92f6`
 - model: `anthropic/claude-opus-4.8`  ·  retrieval: `False`  ·  self-correction: `False`

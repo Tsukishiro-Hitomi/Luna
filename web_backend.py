@@ -1,11 +1,8 @@
-"""卢娜前端的后端逻辑（无 HTTP 细节）：把一条消息变成「闲聊回复」或「修复结果」。
+"""卢娜前端的后端逻辑，不碰 HTTP。
 
-serve.py 只负责收发 HTTP，真正的判断都在这里：
-- ``parse_message``：从自然语言里抠出仓库路径。
-- ``chat_reply``：没路径时，用卢娜的人设闲聊（便宜快的模型 + 兜底话）。
-- ``run_fix``：有路径时，调 ``eval.run_repo`` 修 bug，整理成给前端的 JSON。
-- ``handle_run``：上面三者的分流入口，输入/输出都是普通 dict，方便离线测试。
-- ``portrait_path``：找 assets/luna.*（用户自带的立绘）。
+serve.py 只管收发请求，判断都在这里：一条消息里认得出仓库路径，就调
+``eval.run_repo`` 修 bug；认不出，就用卢娜的人设闲聊。输入输出都是普通 dict，
+方便离线测试。
 """
 import glob
 import os
@@ -17,6 +14,7 @@ _ROOT = os.path.dirname(os.path.abspath(__file__))
 if _ROOT not in sys.path:
     sys.path.insert(0, _ROOT)
 
+from agent import profile
 from agent.config import Config
 from agent.llm import LLMClient
 from eval.run_repo import run_repo
@@ -31,11 +29,8 @@ _PATH_RE = re.compile(r"~?/[^\s，,。；;、:：\"'`（）()【】\[\]<>]+")
 
 
 def parse_message(text):
-    """从一句话里抠出仓库路径（绝对路径或 ~/…），剩下的话当作可选的补充说明。
-
-    返回 ``(repo, task)``：没找到路径时 ``repo`` 为空串；若除路径外还有别的字，
-    整句原文当作 task（补充说明），否则 task 为 None。
-    """
+    """从一句话里抠出仓库路径（绝对路径或 ~/…）；如果除了路径还剩别的字，
+    就把整句原文当补充说明（task）一起带出来。"""
     m = _PATH_RE.search(text or "")
     if not m:
         return "", None
@@ -124,3 +119,18 @@ def portrait_path():
         if os.path.isfile(p):
             return p
     return None
+
+
+def whoami():
+    """给前端判断是不是初次运行。name 是显式设过的名字（没设过就是 None，前端据此
+    弹出「怎么称呼你」），suggested 是个默认猜测（git/$USER），用来预填输入框。跟 CLI
+    共用 ~/.config/luna/profile.json。"""
+    return {"name": profile.get_name(), "suggested": profile.resolve_name()}
+
+
+def save_name(name):
+    """初次运行时把用户的名字存下来（存哪儿跟 whoami 一致），返回存好的名字。"""
+    name = (name or "").strip()[:50]
+    if name:
+        profile.set_name(name)
+    return {"name": profile.get_name()}

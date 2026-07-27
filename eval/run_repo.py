@@ -1,9 +1,6 @@
-"""v2 编排器：把 agent 原地指向【真实 git 仓库】，以其当前失败的测试为目标修到绿。
+"""让 agent 直接在一个真实 git 仓库里进行代码修复。
 
-判据同 fixpoint 一贯口径（解读 A）：失败的测试就是目标；solved = 原本红的转绿 且
-原本绿的没变红。**没有失败测试就不动**（不主动找 bug）。复用 eval.run_bench 的
-run_pytest / judge（零改动）。安全网 = git 新分支 + 不自动提交 + 跑完打印 diff
-（符合"个人 demo 不做容器隔离"的约束）。这也是将来 web 前端唯一要调的接口缝。
+开一条新分支、不自动提交、跑完后展示 diff 。
 """
 import os
 import shlex
@@ -21,7 +18,7 @@ _PYENV = {**os.environ, "PYTHONDONTWRITEBYTECODE": "1"}
 
 @dataclass
 class RepoFixResult:
-    """一次 run_repo 的结果（cli 展示 / 将来 web 返回都用它）。"""
+    """一次 run_repo 的结果。"""
 
     status: str          # solved|unsolved|no_failing_tests|no_tests_collected|
                          # not_git_repo|not_repo_root|dirty_tree|mid_operation|
@@ -65,8 +62,8 @@ def _is_test_file(rel: str) -> bool:
 
 
 def _repo_pytest(repo: str, config: Config) -> dict:
-    """就地在真实仓库跑测试（不 copytree，免破坏 editable install / rootdir）。"""
-    if config.test_cmd:  # generic 逃生舱：rc-only，单伪 node 承载
+    """就地在真实仓库跑测试（不 copytree，以免破坏 editable install / rootdir）。"""
+    if config.test_cmd:  
         r = subprocess.run(shlex.split(config.test_cmd), cwd=repo, capture_output=True,
                            text=True, timeout=config.judge_timeout_s, env=_PYENV)
         return {"<suite>": "passed" if r.returncode == 0 else "failed"}
@@ -125,15 +122,15 @@ def run_repo(repo_path: str, config: Config, *, task: Optional[str] = None,
                              base_sha=base_sha, base_ref=base_ref,
                              message="没收集到任何测试（检查 --python / 依赖是否装好 / --test-cmd）")
 
-    # —— target = 失败的测试（或 --target 覆盖）；为空 → 早退，绝不建分支/跑 agent ——
+    # —— target = 失败的测试（或 --target 覆盖）；为空 → 早退 ——
     target = list(targets) if targets else sorted(k for k, v in baseline.items() if v in ("failed", "error"))
     if not target:
         return RepoFixResult(status="no_failing_tests", solved=False, mode=mode,
                              baseline_summary=summary, base_sha=base_sha, base_ref=base_ref,
-                             message="没有失败的测试——fixpoint 只修红测试，不主动找 bug")
+                             message="没有失败的测试——Luna 只修红测试，不主动找 bug")
 
-    # —— 建新分支（agent 就地改、不提交；安全网 = 分支 + 未提交 diff）——
-    br = branch or f"fixpoint/fix-{int(time.time())}"
+    # —— 建新分支 ——
+    br = branch or f"luna/fix-{int(time.time())}"
     co = _git(repo, "checkout", "-b", br)
     if co.returncode != 0:
         return RepoFixResult(status="agent_error", mode=mode, base_sha=base_sha, base_ref=base_ref,
@@ -151,7 +148,7 @@ def run_repo(repo_path: str, config: Config, *, task: Optional[str] = None,
                              wall_s=time.perf_counter() - t0, message=f"agent 出错：{e}")
     wall = time.perf_counter() - t0
 
-    # —— 反作弊：把 agent 改过的测试文件还原到 base_sha（用 git diff 过滤，规避 node_id 歧义）——
+    # —— 反作弊：把 agent 改过的测试文件还原到 base_sha ——
     changed = _git(repo, "diff", "--name-only").stdout.splitlines()
     test_files = [p for p in changed if _is_test_file(p)]
     if test_files:

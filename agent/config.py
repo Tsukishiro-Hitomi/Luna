@@ -1,14 +1,9 @@
-"""唯一旋钮面板：``Config`` 数据类 + 价格表 + 唯一计价函数 ``cost_of``。
+"""配置面板：一个 ``Config`` 数据类，以及价格表和计价函数 ``cost_of``。
 
-契约摘要（详见 DESIGN.md §8.1 / §8.2）：
-
-- 全部旋钮收在**一个** ``@dataclass Config`` 实例里，字段一律小写；各章统一用
-  ``config.model`` / ``config.max_steps`` 等实例属性访问，**不存在** 模块级大写常量
-  （无 ``MODEL`` / ``MAX_TOKENS`` 之类）。
-- 计价的「价格表结构 + 单位 + 计价函数」各只有一份，owner 就是本模块：``llm`` 与
-  ``loop`` 复用 ``cost_of``，``eval`` 直接读 ``AgentResult.total_cost_usd`` 不再自算。
-- 密钥（``ANTHROPIC_API_KEY`` / ``ANTHROPIC_BASE_URL``）由 anthropic SDK 直接从环境
-  读取，**不进 Config**、不硬编码、不打印、不写日志。
+旋钮都存在一个 ``Config`` 实例里，别处统一用 ``config.model`` 等属性访问。
+计价的价格表和函数只有这一份，llm 和 loop 都复用 ``cost_of``。
+密钥（``ANTHROPIC_API_KEY`` / ``ANTHROPIC_BASE_URL``）不进 Config，由 anthropic SDK
+自己从环境读，以免被泄漏。
 """
 
 from dataclasses import dataclass, field
@@ -19,51 +14,41 @@ import os
 class Config:
     """承载全部运行旋钮的单一配置对象。
 
-    字段分五组（大脑 / 护栏预算 / 能力开关 / 工具截断预算 / 价格表）。默认值即
-    跨章唯一口径，其它模块（eval 的 config_snapshot、.env.example、工具 handler 默认）
-    都对齐这里的数字。消融对照**不新增字段**：只换 ``model``（opus↔haiku）、翻
-    ``enable_retrieval``、翻 ``self_correction``，由 bench 分别构造 ``Config`` 跑。
-
-    谁强制执行各旋钮（见 §8.1 表）：
-      model / max_tokens / stream / timeout_s / max_retries -> llm
-      max_steps -> loop（终止 "max_steps"）；cost_budget_usd -> loop（"budget_exceeded"）
-      run_tests_timeout_s -> 工具（loop 透传）；judge_timeout_s -> eval
-      enable_retrieval / self_correction -> loop（挂载点 / build_system_prompt）
-      max_tool_result_chars 等 -> loop 抽取后透传给工具；price_per_mtok -> cost_of
+    字段按照用途分为：模型、预算护栏、能力开关、工具截断预算、价格表等。
+    做消融对照时不新增字段，只换 ``model`` 或更改 ``enable_retrieval`` / ``self_correction``，
+    由 bench 构造不同 ``Config`` 进行测试。
     """
 
-    # —— 大脑 ——
+    # 模型
     model: str = "anthropic/claude-opus-4.8"          # 正式跑
-    model_haiku: str = "anthropic/claude-haiku-4.5"   # 仅消融对照（精确 id 以网关模型列表为准）
+    model_haiku: str = "anthropic/claude-haiku-4.5"   # 仅作消融对照
     max_tokens: int = 8192                            # 单次响应输出上限（write_file 重写整文件时需余量）
-    stream: bool = True                               # 流式（llm 从此读取，见 §7.3）
-    timeout_s: float = 120.0                          # 单次 HTTP 请求超时（秒；SDK 默认 600 收紧到此）
+    stream: bool = True                               # 流式
+    timeout_s: float = 120.0                          # 单次 HTTP 请求超时（秒）
     max_retries: int = 2                              # 交给 SDK 自动重试（SDK 默认即 2）
 
-    # —— 护栏 / 预算 ——
-    max_steps: int = 30                               # 单任务最多迭代轮数（硬上限）
+    # 护栏 / 预算 
+    max_steps: int = 30                               # 单任务最多迭代轮数
     cost_budget_usd: float = 0.50                     # 单任务成本预算（美元）
-    run_tests_timeout_s: int = 60                     # run_tests 子进程超时（透传给工具层）
+    run_tests_timeout_s: int = 60                     # run_tests 子进程超时（传给工具层）
     judge_timeout_s: int = 60                         # harness 复判 pytest 超时（eval 用）
 
-    # —— 能力开关（消融）——
-    enable_retrieval: bool = False                    # embedding 代码检索（v1）；False = 仅靠 search 工具
-    self_correction: bool = False                     # 为真时 system prompt 追加反思段（v1 消融）
+    # 能力开关
+    enable_retrieval: bool = False                    # embedding 代码检索；False 时仅靠 search 工具
+    self_correction: bool = False                     # 为 True 时 system prompt 追加反思段
 
-    # —— 工具截断预算（loop 抽取后透传给 guarded_execute / 工具行级预算）——
+    # 工具截断预算
     max_tool_result_chars: int = 8000
     max_read_lines: int = 400
     max_search_hits: int = 100
     max_test_output: int = 4000
 
-    # —— v2：真实仓库支持（默认 None → 对 fixture solve/bench 逐字节无影响）——
-    test_cmd: Optional[str] = None      # generic 逃生舱：逐字命令，rc-only 粗判（非 pytest 仓库）
-    test_python: Optional[str] = None   # pytest 模式解释器；None → sys.executable
+    test_cmd: Optional[str] = None      
+    test_python: Optional[str] = None   
 
-    # —— 成本核算：模型 id -> (输入价, 输出价)，美元/百万 token（唯一价格表）——
-    # 默认取第一方参考价（Opus 4.8 = $5/$25、Haiku 4.5 = $1/$5 每百万 token）；
-    # reviewer 需按聚合网关实际计费校准。未知模型缺表 -> cost_of 返回 None
-    # （调用方按 0 展示 + 留告警），绝不崩溃。
+    # 成本核算：模型 id -> (输入价, 输出价)，美元/百万 token
+    # 默认取第一方参考价（Opus 4.8 = $5/$25、Haiku 4.5 = $1/$5 每百万 token），
+    # 走聚合网关时按实际计费校准。未知模型缺表时 cost_of 返回 None。
     price_per_mtok: Dict[str, Tuple[float, float]] = field(
         default_factory=lambda: {
             "anthropic/claude-opus-4.8": (5.0, 25.0),
@@ -73,26 +58,15 @@ class Config:
 
     @classmethod
     def from_env(cls) -> "Config":
-        """在默认值之上叠加 ``.env`` 里的**非密钥**旋钮，返回新的 ``Config`` 实例。
+        """在默认值之上叠加 ``.env`` 里的非密钥旋钮，返回新的 ``Config``。
 
-        由 ``cli.py`` 在 ``load_dotenv()`` 之后调用。env 变量 -> 字段映射（§14.4）：
-
-          - ``FIXPOINT_MODEL``    -> ``model``
-          - ``MAX_STEPS``         -> ``max_steps``          （解析为 int）
-          - ``RUN_TESTS_TIMEOUT`` -> ``run_tests_timeout_s``（解析为 int）
-
-        契约：
-          - 未设置的 env 变量 -> 对应字段保持 dataclass 默认值。
-          - 密钥类（``ANTHROPIC_API_KEY`` / ``ANTHROPIC_BASE_URL``）**绝不**被吸收进
-            Config；它们由 SDK 直接读环境。
-          - 其余旋钮（max_tokens、cost_budget_usd、开关、截断预算、price_per_mtok 等）
-            本方法不从 env 覆盖，用 Config 默认。
-
-        Returns:
-            一个字段已按 env 覆盖的新 ``Config`` 实例。
+        由 ``cli.py`` 在 ``load_dotenv()`` 之后调用。目前只吸收 ``LUNA_MODEL`` /
+        ``MAX_STEPS`` / ``RUN_TESTS_TIMEOUT`` / ``LUNA_TEST_CMD`` ，其他
+        保持字段默认。密钥（``ANTHROPIC_API_KEY`` / ``ANTHROPIC_BASE_URL``）绝不会被存进来，
+        由 SDK 直接读环境。
         """
         overrides = {}
-        model = os.environ.get("FIXPOINT_MODEL")
+        model = os.environ.get("LUNA_MODEL")
         if model is not None:
             overrides["model"] = model
         max_steps = os.environ.get("MAX_STEPS")
@@ -101,7 +75,7 @@ class Config:
         timeout = os.environ.get("RUN_TESTS_TIMEOUT")
         if timeout is not None:
             overrides["run_tests_timeout_s"] = int(timeout)
-        test_cmd = os.environ.get("FIXPOINT_TEST_CMD")
+        test_cmd = os.environ.get("LUNA_TEST_CMD")
         if test_cmd is not None:
             overrides["test_cmd"] = test_cmd
         return cls(**overrides)
@@ -113,20 +87,7 @@ def cost_of(
     config: "Config",
     model: Optional[str] = None,
 ) -> Optional[float]:
-    """按唯一价格表把 token 用量折算成美元成本（项目内唯一计价函数）。
-
-    Args:
-        in_tokens: 输入（prompt）token 数。
-        out_tokens: 输出（completion）token 数。
-        config: 提供 ``price_per_mtok`` 价格表与默认 ``model`` 的配置实例。
-        model: 计价所用模型 id；``None`` 时回落到 ``config.model``。
-
-    计算：设该模型价格为 ``(pin, pout)``（美元/百万 token），则返回
-    ``(in_tokens * pin + out_tokens * pout) / 1_000_000``。
-
-    Returns:
-        成本（美元）；若模型不在 ``config.price_per_mtok`` 中则返回 ``None``
-        （调用方约定按 0 展示并记一条告警，绝不崩溃）。
+    """按价格表把 token 用量折算成美元。
     """
     if model is None:
         model = config.model

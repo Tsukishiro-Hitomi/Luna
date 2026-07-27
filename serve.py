@@ -1,10 +1,8 @@
-"""卢娜 —— fixpoint 的本地聊天前端（入口）。
+"""卢娜 —— 本地聊天前端（入口）。
 
-跑法：.venv/bin/python serve.py  →  打开 http://127.0.0.1:8000
+运行：.venv/bin/python serve.py  →  打开 http://127.0.0.1:8000
 分工：前端静态资源在 web/，后端逻辑在 web_backend.py，本文件只管收发 HTTP。
-换立绘：把图片存成 assets/luna.png（.jpg/.webp 也行），刷新即用；没有就用内置 SVG 猫娘。
-⚠️ 仅本地自用：/run 会在你机器上执行目标仓库的测试命令（= 任意代码执行），
-   只对你【信任的】仓库用。服务只绑 127.0.0.1、不对外。
+换立绘：把图片存成 assets/luna.png（.jpg/.webp），刷新即用；没有就用内置 SVG 猫娘。
 """
 import json
 import mimetypes
@@ -60,23 +58,35 @@ class Handler(BaseHTTPRequestHandler):
                 self._send_file(p)
             else:
                 self._send(404, "text/plain", b"no portrait")
+        elif self.path == "/whoami":
+            self._send_json(web_backend.whoami())
         else:
             self._send(404, "text/plain", b"not found")
 
-    def do_POST(self):
-        if self.path != "/run":
-            self._send(404, "text/plain", b"not found")
-            return
+    def _read_json(self):
         try:
             n = int(self.headers.get("Content-Length", 0))
-            req = json.loads(self.rfile.read(n) or b"{}")
+            return json.loads(self.rfile.read(n) or b"{}")
         except Exception:
             self._send(400, "application/json",
                        json.dumps({"status": "error", "message": "bad request"}).encode())
-            return
-        payload = web_backend.handle_run(req)
+            return None
+
+    def _send_json(self, obj):
         self._send(200, "application/json",
-                   json.dumps(payload, ensure_ascii=False).encode("utf-8"))
+                   json.dumps(obj, ensure_ascii=False).encode("utf-8"))
+
+    def do_POST(self):
+        if self.path == "/run":
+            req = self._read_json()
+            if req is not None:
+                self._send_json(web_backend.handle_run(req))
+        elif self.path == "/name":
+            req = self._read_json()
+            if req is not None:
+                self._send_json(web_backend.save_name(req.get("name")))
+        else:
+            self._send(404, "text/plain", b"not found")
 
     def log_message(self, *args):  # 安静
         pass
@@ -85,7 +95,7 @@ class Handler(BaseHTTPRequestHandler):
 def main():
     port = int(os.environ.get("PORT", "8000"))
     srv = ThreadingHTTPServer(("127.0.0.1", port), Handler)
-    print(f"卢娜（fixpoint 代码助手）已就位：http://127.0.0.1:{port}   （仅本地；Ctrl-C 停）")
+    print(f"卢娜（代码助手）已就位：http://127.0.0.1:{port}   （仅本地；键入 Ctrl-C 停止运行）")
     try:
         srv.serve_forever()
     except KeyboardInterrupt:

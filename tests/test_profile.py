@@ -1,4 +1,4 @@
-"""agent.profile 单测（v2 个性化）：resolve 顺序、损坏兜底、问候纯文本、round-trip。"""
+"""agent.profile 的单测：名字优先读 profile.json、读不到再回落 git/$USER，profile 损坏也不崩，问候语保持纯文本。"""
 from agent import profile
 
 
@@ -24,7 +24,7 @@ def test_resolve_falls_back_nonempty(tmp_path, monkeypatch):
 
 def test_corrupt_profile_does_not_crash(tmp_path, monkeypatch):
     monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path))
-    p = tmp_path / "fixpoint" / "profile.json"
+    p = tmp_path / "luna" / "profile.json"
     p.parent.mkdir(parents=True)
     p.write_text("{ not valid json", encoding="utf-8")
     assert profile.get_name() is None                 # 损坏 → None，不抛

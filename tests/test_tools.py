@@ -1,14 +1,8 @@
-"""tests/test_tools.py —— agent/tools.py 的起步测试集（DESIGN §6.4 验收标准）。
+"""agent/tools.py 的测试集。
 
-策略（脚手架）
---------------
-- **声明式的 ``TOOLS`` schema** 已在 tools.py 写全 → 这些断言是**绿灯**（当下即通过）。
-- **handler / guarded_execute 是桩**（``raise NotImplementedError``）→ 针对它们行为的断言是
-  **红灯规格（M0）**：现在失败，实现后转绿。安全相关（路径封闭经 guarded_execute）完整覆盖。
-- 其余较复杂 / 依赖真实 pytest 子进程的契约用 ``# TODO(你来补)`` 明确列出。
-
-约定：临时目录用 pytest 的 ``tmp_path`` 作 ``workdir``；guarded_execute 的两个护栏标量在测试里
-以位置无关的关键字传入（对齐 config 默认 ``run_tests_timeout_s=60`` / ``max_tool_result_chars=8000``）。
+覆盖 TOOLS schema、六个工具各自的行为，以及 guarded_execute 的路径封闭和错误兜底。
+测试统一用 pytest 的 tmp_path 当 workdir；guarded_execute 的两个护栏标量以关键字传入，
+取值对齐 config 默认（run_tests_timeout_s=60 / max_tool_result_chars=8000）。
 """
 from __future__ import annotations
 
@@ -18,9 +12,9 @@ from agent.tools import (
     TOOLS,
     edit_file,
     guarded_execute,
-    list_dir,  # noqa: F401  (供 TODO 段落补测引用)
+    list_dir,  # noqa: F401
     read_file,
-    run_tests,  # noqa: F401  (供 TODO 段落补测引用)
+    run_tests,  # noqa: F401
     search,
     write_file,
 )
@@ -28,7 +22,7 @@ from agent.tools import (
 # guarded_execute 的护栏标量（loop 实际从 config 抽取；测试里给定值）。
 GUARD_KW = {"test_timeout": 60, "max_result_chars": 8000}
 
-# handler 名 ↔ 契约集合（用于 schema 一致性断言）。
+# handler 名 ↔ 期望参数集合（用于 schema 一致性断言）。
 EXPECTED_TOOL_NAMES = {
     "list_dir",
     "read_file",
@@ -48,7 +42,7 @@ EXPECTED_REQUIRED = {
 
 
 # ===========================================================================
-# TOOLS schema —— 声明式，已写全，当下即绿（DESIGN §6.4「TOOLS schema」）
+# TOOLS schema
 # ===========================================================================
 def test_tools_count_is_six():
     assert len(TOOLS) == 6
@@ -80,10 +74,10 @@ def test_tools_required_matches_contract():
 
 
 # ===========================================================================
-# 安全：路径封闭经 guarded_execute（红灯规格，安全相关，完整覆盖 DESIGN §6.4「路径封闭」）
+# 安全：guarded_execute 的路径封闭
 # ===========================================================================
-# 每个碰文件系统的工具都喂越界路径（../ 相对越界 + 绝对路径），断言：
-#   (1) 返回类型是 str；(2) 以「错误：」开头；(3) 不抛异常。
+# 每个碰文件系统的工具都喂越界路径（相对 ../ 与绝对路径两种），
+# 期望被路径封闭挡下：返回错误串、不抛异常。
 ESCAPE_CASES = [
     ("read_file", {"path": "../secret.txt"}),
     ("read_file", {"path": "/etc/hosts"}),
@@ -131,7 +125,7 @@ def test_path_escape_does_not_write_outside_file(tmp_path):
 
 
 # ===========================================================================
-# guarded_execute 不变式（红灯规格，DESIGN §6.4「guarded_execute 不变式」）
+# guarded_execute 不变式
 # ===========================================================================
 def test_guarded_execute_unknown_tool(tmp_path):
     out = guarded_execute("frobnicate", {}, str(tmp_path), **GUARD_KW)
@@ -157,7 +151,7 @@ def test_guarded_execute_unexpected_arg_returns_error(tmp_path):
 
 
 # ===========================================================================
-# read_file：带行号（红灯规格，DESIGN §6.4「read_file」）
+# read_file：带行号读取
 # ===========================================================================
 def test_read_file_line_numbers(tmp_path):
     (tmp_path / "sample.py").write_text("alpha\nbeta\ngamma\n", encoding="utf-8")
@@ -240,7 +234,7 @@ def test_read_file_truncates_over_max(tmp_path):
 
 
 # ===========================================================================
-# search：命中格式（红灯规格，DESIGN §6.4「search」）
+# search：命中格式
 # ===========================================================================
 def test_search_hit_format(tmp_path):
     (tmp_path / "code.py").write_text("def foo():\n    return 42\n", encoding="utf-8")
@@ -317,7 +311,7 @@ def test_search_caps_at_max_hits(tmp_path):
 
 
 # ===========================================================================
-# edit_file：old 不存在 / 不唯一 / 唯一成功（红灯规格，DESIGN §6.4「edit_file」）
+# edit_file：old 不存在 / 不唯一 / 唯一成功
 # ===========================================================================
 def test_edit_file_old_not_found(tmp_path):
     f = tmp_path / "m.py"
@@ -356,7 +350,7 @@ def test_edit_file_old_equals_new_rejected(tmp_path):
 
 
 # ===========================================================================
-# write_file：创建 / 覆盖（红灯规格，DESIGN §6.4「write_file」）
+# write_file：创建 / 覆盖
 # ===========================================================================
 def test_write_file_creates_with_parent_dirs(tmp_path):
     out = write_file(str(tmp_path), "sub/new.py", "print('hi')\n")
@@ -384,7 +378,7 @@ def test_write_file_target_is_dir_returns_error(tmp_path):
 
 
 # ===========================================================================
-# list_dir：排序 / 目录尾斜杠 / 过滤噪声 / 空目录 / 错误串（DESIGN §6.4「list_dir」）
+# list_dir：排序 / 目录尾斜杠 / 过滤噪声 / 空目录 / 错误串
 # ===========================================================================
 def test_list_dir_sorted_with_dir_slash(tmp_path):
     (tmp_path / "b.py").write_text("", encoding="utf-8")
@@ -421,28 +415,3 @@ def test_list_dir_missing_and_not_dir(tmp_path):
     assert list_dir(str(tmp_path), "nope") == "错误：目录不存在：nope"
     (tmp_path / "f.py").write_text("", encoding="utf-8")
     assert list_dir(str(tmp_path), "f.py") == "错误：不是目录：f.py"
-
-
-# ===========================================================================
-# TODO(你来补)：以下契约留待补测（DESIGN §6.2 / §6.4）
-# ===========================================================================
-# --- edit_file ---
-# TODO(你来补): 测试文件不存在 → "错误：文件不存在：…（如需新建请用 write_file）"。
-# TODO(你来补): 测试唯一替换成功返回里含替换处起始行号与上下文（带行号，约 5 行）。
-#
-# --- run_tests（核心，依赖真实 pytest 子进程；建议用 fixture 临时副本作 workdir）---
-# TODO(你来补): 测试纯净副本 → 顶行 PASS、returncode=0、统计 passed 数与实际用例数一致。
-# TODO(你来补): 测试 git apply 某 break.patch 后 → 顶行 FAIL、「失败用例」段点名目标测试。
-# TODO(你来补): 测试传该 node id（tests/xxx::test_yyy）单跑也复现 FAIL；:: 前文件部分经路径封闭。
-# TODO(你来补): 测试失败详情 ≤ max_test_output（默认 4000），超出带截断标记。
-# TODO(你来补): 测试注入死循环 break + 很小 timeout → 返回 "错误：测试运行超时…"，函数在 timeout 附近返回。
-# TODO(你来补): 测试不存在的测试路径 → returncode=5 分支的「未收集到任何测试」提示。
-# TODO(你来补): 测试连续跑 3 次判定与计数一致（不因 "in 0.06s" 计时波动 flaky）。
-#
-# --- guarded_execute ---
-# TODO(你来补): 测试对随机/畸形 tool_input 循环调用，返回类型恒为 str（属性测试式）。
-# TODO(你来补): 测试最终输出超过 max_result_chars 被截断 + "…（输出过长已截断）"。
-# TODO(你来补): 测试 run_tests 经 guarded_execute 时 timeout=test_timeout 被正确注入。
-#
-# --- 返回约定（横切）---
-# TODO(你来补): 测试各工具对外文本中的路径均为 workdir 相对形式（断言不含 workdir 绝对前缀）。

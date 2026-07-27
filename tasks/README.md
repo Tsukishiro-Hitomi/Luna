@@ -1,6 +1,6 @@
 # tasks/ —— 任务作者指南
 
-任务集是 fixpoint 的「考卷」。每道题是一次受控实验：从纯净 `tasks/fixture/`
+任务集是 Luna 的「考卷」。每道题是一次受控实验：从纯净 `tasks/fixture/`
 （§4 的迷你表达式求值器，pytest 全绿）出发，用一个 `break.patch` 把某个函数
 **改坏**或**挖空**，让预先指定的测试变红；agent 的任务是把红改回绿。判定权始终
 在 harness 手里——它独立复跑 `pytest`，**绝不采信 agent 自述**。

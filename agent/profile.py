@@ -1,8 +1,7 @@
-"""v2 个性化：记住用户名字 + 问候语。
+"""个性化：记住用户名字 + 问候语。
 
-存机器级 home（``~/.config/fixpoint/profile.json``，尊重 $XDG_CONFIG_HOME），
-**绝不**落进目标仓库 / diff / 记分卡 / 日志 / system prompt。所有磁盘与子进程操作
-都 try/except 兜底——个性化再花哨也不能拖垮主流程。
+存机器级 home（``~/.config/luna/profile.json``，
+**绝不**落进目标仓库 / diff / 记分卡 / 日志 / system prompt。
 """
 import json
 import os
@@ -12,7 +11,7 @@ from typing import Optional
 
 def _profile_path() -> str:
     base = os.environ.get("XDG_CONFIG_HOME") or os.path.join(os.path.expanduser("~"), ".config")
-    return os.path.join(base, "fixpoint", "profile.json")
+    return os.path.join(base, "luna", "profile.json")
 
 
 def get_name() -> Optional[str]:
@@ -35,8 +34,6 @@ def set_name(name: str) -> None:
 
 def resolve_name() -> str:
     """profile.json → `git config --global user.name` → $USER → "there"。
-
-    用 ``--global``（非 local）——避免取到目标仓库里的 bot/同事名。
     """
     name = get_name()
     if name:
@@ -52,5 +49,5 @@ def resolve_name() -> str:
 
 
 def greeting(name: str) -> str:
-    """一句纯文本问候（无 emoji）。"""
-    return f"你好，{name}！fixpoint 已就位。"
+    """问候。"""
+    return f"你好，{name}！Luna 已就位。"

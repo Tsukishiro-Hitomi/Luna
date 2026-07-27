@@ -1,6 +1,6 @@
-"""eval.run_repo 单测（v2 编排器）：git 安全 / target=失败测试 / judge / 反作弊 / 早退。
+"""给 eval.run_repo 的单测：在临时 git 仓库上把整条流程跑通——git 安全检查、只盯失败的测试、判定有没有修好、防作弊、没有失败测试时直接早退。
 
-全程 monkeypatch 掉 run_agent（不打网关），在临时 git 仓库上验证编排与判定。
+全程 monkeypatch 掉 run_agent，所以不会真的打网关，改动都是我们自己往仓库里写的。
 """
 import os
 import subprocess
@@ -58,7 +58,7 @@ def test_solved(tmp_path, monkeypatch):
     assert r.status == "solved" and r.solved
     assert any("test_sub" in t for t in r.fixed)
     assert r.regressions == []
-    assert r.branch and r.branch.startswith("fixpoint/fix-")
+    assert r.branch and r.branch.startswith("luna/fix-")
     assert "calc.py" in r.diff
 
 

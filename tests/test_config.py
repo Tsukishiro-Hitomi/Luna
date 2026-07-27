@@ -1,11 +1,5 @@
-"""agent.config 的起步测试。
-
-分两类：
-- **声明式**（字段默认值、价格表）在 config.py 已写全，故这里是真实断言、当下即绿，
-  钉死 DESIGN.md §8.1 的默认值口径。
-- **逻辑**（from_env 映射、cost_of 计算）在 config.py 仍是 NotImplementedError 桩，
-  其测试已按「已知输入 -> 期望值」写出但整类 skip；实现后移除 skip 即成红灯规格。
-"""
+"""agent.config 的测试：核对字段默认值和价格表，验证 cost_of 的计价，
+以及 from_env 的环境变量映射（顺带确认密钥不会被吸进 Config）。"""
 
 import pytest
 
@@ -13,7 +7,7 @@ from agent.config import Config, cost_of
 
 
 class TestDefaults:
-    """§8.1 默认值口径（跨章唯一，其它模块引用同一数字）。"""
+    """默认值口径，其它模块都引用这里的同一批数字。"""
 
     def test_brain_defaults(self):
         c = Config()
@@ -57,7 +51,7 @@ class TestDefaults:
 
 
 class TestCostOf:
-    """§8.2 唯一计价函数：(in*pin + out*pout) / 1_000_000。"""
+    """唯一的计价函数：(in*pin + out*pout) / 1_000_000。"""
 
     def test_default_model_known_inputs(self):
         c = Config()  # 默认 model = opus (5.0, 25.0)
@@ -80,10 +74,10 @@ class TestCostOf:
         assert cost_of(100, 100, Config(), model="anthropic/does-not-exist") is None
 
 class TestFromEnv:
-    """§14.4 env -> 字段映射；密钥绝不进 Config。"""
+    """env 到字段的映射；密钥绝不进 Config。"""
 
     def test_overrides_mapped_fields(self, monkeypatch):
-        monkeypatch.setenv("FIXPOINT_MODEL", "anthropic/claude-haiku-4.5")
+        monkeypatch.setenv("LUNA_MODEL", "anthropic/claude-haiku-4.5")
         monkeypatch.setenv("MAX_STEPS", "7")
         monkeypatch.setenv("RUN_TESTS_TIMEOUT", "12")
         c = Config.from_env()
@@ -92,7 +86,7 @@ class TestFromEnv:
         assert c.run_tests_timeout_s == 12
 
     def test_unset_env_keeps_defaults(self, monkeypatch):
-        monkeypatch.delenv("FIXPOINT_MODEL", raising=False)
+        monkeypatch.delenv("LUNA_MODEL", raising=False)
         monkeypatch.delenv("MAX_STEPS", raising=False)
         monkeypatch.delenv("RUN_TESTS_TIMEOUT", raising=False)
         c = Config.from_env()
@@ -107,7 +101,3 @@ class TestFromEnv:
         assert not hasattr(c, "api_key")
         assert "sk-should-not-leak" not in repr(c)
 
-
-# TODO(你来补): 其余待补项
-#   - from_env 对非法数值（如 MAX_STEPS="abc"）的处理约定（DESIGN 未明确，需与 §8.1 对齐后补）
-#   - cost_of 非默认 model 参数与缺表告警路径在 llm/loop 里的联动（属对应模块测试）

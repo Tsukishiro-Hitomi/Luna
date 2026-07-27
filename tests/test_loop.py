@@ -1,13 +1,9 @@
-"""tests/test_loop.py —— agent/loop.py 的起步测试集（DESIGN §8.12）。
+"""agent/loop.py 的离线单测。
 
-loop 主要靠 bench 做**集成验证**；本文件只放：
-- **可运行**的真实断言：三个 dataclass（AgentResult/StepRecord/ToolCall）的声明式契约
-  （字段名与默认值、steps 是列表、无 solved 字段）——现在即绿。
-- **一个用 monkeypatch 假 LLM 的骨架测试**：离线驱动 run_agent 走完「tool_use 一轮 →
-  纯文字收尾」，断言 stop_reason=="model_stop"。因 run_agent 目前是桩，先 skip 标 TODO。
-- 其余验收项以 **TODO 清单**列出，逐条对齐 DESIGN §8.12。
-
-全程不触网络（假 LLM）；也不触真实工具 / 沙箱（monkeypatch 掉 guarded_execute）。
+loop 的端到端验证靠 bench 跑真实任务，这里只覆盖能离线断言的部分：三个 dataclass
+的字段，以及用 monkeypatch 假 LLM 驱动 run_agent 走各条出口（model_stop /
+max_steps / budget_exceeded / error）、检查历史结构和记账。全程不触网络，也不碰
+真实工具和沙箱（guarded_execute 被 monkeypatch 掉）。
 """
 
 from __future__ import annotations
@@ -21,11 +17,9 @@ from agent.loop import AgentResult, StepRecord, ToolCall, run_agent
 from agent.llm import Usage
 from agent.config import Config
 
-_TODO = "TODO(实现后取消 skip)：run_agent 及其 helper 目前是桩"
-
 
 # ---------------------------------------------------------------------------
-# 可运行的真实断言：dataclass 声明式契约（DESIGN §8.4）——现在即绿
+# dataclass 的字段
 # ---------------------------------------------------------------------------
 def test_agent_result_defaults_and_shape():
     r = AgentResult(stop_reason="model_stop")
@@ -40,7 +34,7 @@ def test_agent_result_defaults_and_shape():
 
 
 def test_agent_result_has_no_solved_field():
-    """有意不设 solved 字段——杜绝「信任模型自述」（DESIGN §8.4）。"""
+    """有意不设 solved 字段，避免把模型自述当成通过与否的依据。"""
     names = {f.name for f in dataclasses.fields(AgentResult)}
     assert "solved" not in names
     assert "usage" not in names                          # 不存在 result.usage dict
@@ -100,10 +94,7 @@ def _make_fake_llm_class(script):
 
 
 def test_run_agent_model_stop_with_fake_llm(tmp_path, monkeypatch):
-    """离线骨架：一轮 tool_use（read_file）→ 一轮纯文字收尾 → stop_reason=="model_stop"。
-
-    覆盖 DESIGN §8.12 的「model_stop 出口 + 如实记录步数/工具调用 + 不判 solved」。
-    """
+    """一轮 tool_use（read_file）后纯文字收尾，走 model_stop 出口，并如实记录步数和工具调用。"""
     script = [
         _fake_message(
             content=[
@@ -140,8 +131,7 @@ def test_run_agent_model_stop_with_fake_llm(tmp_path, monkeypatch):
 
 
 def test_build_system_prompt_self_correction_toggle():
-    """build_system_prompt：self_correction=True 时含反思段、为假时不含；均逐字稳定
-    （DESIGN §8.8）。"""
+    """self_correction=True 时含反思段、为假时不含；两者都逐字稳定，利于 prompt caching。"""
     from agent.loop import build_system_prompt
 
     base = build_system_prompt(Config(self_correction=False))
@@ -340,10 +330,3 @@ def test_enable_retrieval_toggle(tmp_path, monkeypatch):
     run_agent(str(tmp_path), "TASKTEXT", Config(enable_retrieval=True))
     assert calls["n"] == 1             # 开：调一次
     assert "RETRIEVED-CONTEXT" in seen[-1] and "TASKTEXT" in seen[-1]
-
-
-# ---------------------------------------------------------------------------
-# TODO 待补清单（逐条对齐 DESIGN §8.12 验收标准）
-# ---------------------------------------------------------------------------
-# TODO(集成，bench 跑): 端到端冒烟 —— 真实任务（改坏乘除优先级）观察「定位 → 改 → run_tests → 绿 → 停」，
-#               每步 token/成本/工具调用被如实记录。属 eval/run_bench 的集成验证，不在离线单测。

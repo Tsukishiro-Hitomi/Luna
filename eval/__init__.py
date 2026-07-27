@@ -1,9 +1,8 @@
-"""fixpoint 评测 harness 包（DESIGN §10）。
+"""luna 的评测 harness，负责判卷和记分。
 
-本包是「裁判 + 记分」子系统：遍历任务集、为每题准备干净隔离副本并打
-`break.patch`、在副本上跑一遍 agent 主循环、**独立复跑 pytest** 判定 solved
-（目标测试全绿 **且** 无回归），最后汇总出 `scorecard.md` 与机器可读的
-`results/<label>.json`。判定权始终在 harness 手里，**绝不采信 agent 自述**。
+对每道题准备一份干净的隔离副本、打上 break.patch，跑一遍 agent 主循环，
+然后自己独立复跑 pytest 来判断是否 solved：目标测试全绿且没有回归才算过。
+跑完后将结果汇总成 scorecard.md 和 results/<label>.json。
 
-对外入口见 `eval.run_bench`。
+入口是 eval.run_bench。
 """

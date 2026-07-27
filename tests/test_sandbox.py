@@ -1,11 +1,8 @@
-"""``agent.sandbox`` 的单测（DESIGN §5.4 验收标准）。
+"""agent.sandbox 的单测。
 
-路径封闭是**安全关键**：一个漏洞就意味着 agent 能读写工作区之外的文件。因此
-``resolve_in_workdir`` 的测试写得较完整（真实断言，作为红灯规格）；工作区生命周期
-相关的用例先以 ``@pytest.mark.skip(TODO...)`` 占位、逐条列出待补行为。
-
-注：sandbox 中的实现函数当前均为桩（``raise NotImplementedError``），故下方路径封闭
-用例现在应为**红灯**——它们是待实现的规格；实现补齐后即应转绿。
+路径封闭是安全关键：一个漏洞就意味着 agent 能读写工作区之外的文件，所以
+resolve_in_workdir 的放行/越界用例写得比较全。剩下的是工作区生命周期
+（make_workspace / cleanup_workspace / task_sandbox）的用例。
 """
 
 import difflib
@@ -33,11 +30,10 @@ FIXTURE_DIR = os.path.join(
 
 @pytest.fixture
 def workdir(tmp_path):
-    """搭一个形似 fixture 副本的工作目录，返回其路径（str）。
+    """搭一个形似 fixture 副本的工作目录，返回其路径。
 
-    结构：``evaluator.py`` / ``parser.py`` / ``sub/`` / ``tests/test_parser.py``。
-    断言里一律用 ``os.path.realpath(workdir)`` 作为期望 root，避免平台上临时目录
-    本身带软链造成误判。
+    断言里一律拿 os.path.realpath(workdir) 当期望 root，免得临时目录本身带软链
+    造成误判。
     """
     root = tmp_path / "work"
     root.mkdir()
@@ -50,15 +46,15 @@ def workdir(tmp_path):
 
 
 # --------------------------------------------------------------------------- #
-# 异常层级（声明式，立即可绿）
+# 异常层级
 # --------------------------------------------------------------------------- #
 def test_pathescape_is_subclass_of_sandboxerror():
-    # 契约：捕 SandboxError 必须也能兜住 PathEscape
+    # 捕 SandboxError 时也应该能兜住 PathEscape
     assert issubclass(PathEscape, SandboxError)
 
 
 # --------------------------------------------------------------------------- #
-# 5.2 resolve_in_workdir —— 放行路径
+# resolve_in_workdir —— 放行路径
 # --------------------------------------------------------------------------- #
 def test_relative_path_resolves_inside(workdir):
     result = resolve_in_workdir(workdir, "evaluator.py")
@@ -101,7 +97,7 @@ def test_absolute_path_inside_is_allowed(workdir):
 
 
 # --------------------------------------------------------------------------- #
-# 5.2 resolve_in_workdir —— 越界拒绝（PathEscape）
+# resolve_in_workdir —— 越界拒绝（PathEscape）
 # --------------------------------------------------------------------------- #
 def test_parent_traversal_rejected(workdir):
     with pytest.raises(PathEscape):
@@ -162,7 +158,7 @@ def test_root_realpath_normalization_consistency():
     tempfile 给的临时目录多在 ``/tmp`` 下，而 ``/tmp`` 是指向 ``/private/tmp`` 的软链；
     若 ``resolve_in_workdir`` 未先对 root 做 realpath，包含判断会全线误判。
     """
-    raw = tempfile.mkdtemp(prefix="fixpoint_test_", dir="/tmp")
+    raw = tempfile.mkdtemp(prefix="luna_test_", dir="/tmp")
     try:
         canonical = os.path.realpath(raw)
         assert raw != canonical  # 前提：/tmp 确为软链
@@ -176,10 +172,7 @@ def test_root_realpath_normalization_consistency():
 
 
 # --------------------------------------------------------------------------- #
-# 5.3 工作区生命周期 —— 起步集（TODO：待补真实断言）
-#
-# 这些用例需要真实的 tasks/fixture/ 与某个 break.patch 作为素材，先占位登记；
-# 补齐时请对照 §5.4 的验收清单逐条落地。
+# 工作区生命周期
 # --------------------------------------------------------------------------- #
 def test_make_workspace_populates_workdir():
     workdir = make_workspace(FIXTURE_DIR)
