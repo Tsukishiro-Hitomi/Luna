@@ -102,26 +102,28 @@ python serve.py            # → http://127.0.0.1:8000  (Ctrl-C to stop)
 
 | model            | pass@1        | avg steps | avg tokens | avg cost |
 |------------------|:-------------:|:---------:|:----------:|:--------:|
-| claude-opus-4.8  | 100% (12/12)  |    6.3    |   22,142   |  $0.12   |
+| claude-opus-4.8  | 100% (12/12)  |    5.9    |   21,529   |  $0.117  |
 
-Full run: **$1.44** total · **~22 s/task** avg wall-clock. Every verdict is the harness
+Full run: **$1.41** total · **18.6 s/task** avg wall-clock. Every verdict is the harness
 independently re-running pytest against the pristine tests — the model never grades itself.
+All three conditions below were rerun on **2026-07-27** from the same commit (`4834227`),
+with one attempt per task. See the [full per-task scorecard](eval/scorecard.md).
 
 ### Ablations
 
 | variant                            | pass@1        | avg steps | avg cost |
 |------------------------------------|:-------------:|:---------:|:--------:|
-| opus-4.8 (baseline)                | 100% (12/12)  |    6.3    |  $0.120  |
-| haiku-4.5 (weaker / cheaper brain) | 100% (12/12)  |    6.8    |  $0.036  |
-| opus-4.8 + embedding retrieval     | 100% (12/12)  |    5.8    |  $0.179  |
+| opus-4.8 (baseline)                | 100% (12/12)  |    5.9    |  $0.117  |
+| haiku-4.5 (weaker / cheaper brain) | 100% (12/12)  |    7.2    |  $0.035  |
+| opus-4.8 + embedding retrieval     | 100% (12/12)  |    5.5    |  $0.171  |
 
 > On this deliberately simple task set all three variants solve every task (a ceiling
 > effect), so the signal is **efficiency, not solve-rate**:
-> - **haiku** matches opus at **~3× lower cost** (a couple more steps) — the benchmark
+> - **haiku** matches opus at **~3.3× lower cost** (about 1.3 more steps) — the benchmark
 >   doesn't punish the weaker model here.
-> - **embedding retrieval** cuts steps (6.3 → 5.8; e.g. the division-stub task dropped
->   8 → 4 steps, since retrieval hands the agent the exact broken function) but *raises*
->   cost (~+50%): the injected code is re-sent in every turn's history (MVP doesn't trim),
+> - **embedding retrieval** cuts steps (5.9 → 5.5; e.g. the division-stub task dropped
+>   9 → 4 steps, since retrieval hands the agent the exact broken function) but *raises*
+>   cost (~+46%): the injected code is re-sent in every turn's history (MVP doesn't trim),
 >   so the step savings don't pay for the token overhead — yet. Trimming history or gating
 >   injection would flip that.
 >
