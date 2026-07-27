@@ -100,40 +100,30 @@ python serve.py            # → http://127.0.0.1:8000  (Ctrl-C to stop)
 
 ## Results
 
-> The figures below are the last published single-attempt run of the original 12-task
-> expression fixture. The expanded 30-task dataset is fully validated offline; its
-> three-attempt campaign will be published separately so old and new results are not mixed.
+The official `multi_repo_v1` campaign ran all 30 tasks three times per condition: **270
+independently judged attempts** from one clean commit (`acdbc5e`) and one frozen task digest.
+Harness errors remain in the denominator; this run had none.
 
-<!-- from `python cli.py bench` (label=baseline): 12 controlled tasks, no retrieval / no self-correction -->
+| variant | solved attempts | solve rate (95% Wilson CI) | steps mean±sd | cost mean±sd |
+|---|:---:|:---:|:---:|:---:|
+| opus-4.8 baseline | 90/90 | 100% (95.9%–100%) | 6.37±0.88 | $0.1319±0.0313 |
+| haiku-4.5 | 90/90 | 100% (95.9%–100%) | 8.26±1.47 | $0.0378±0.0131 |
+| opus-4.8 + embedding retrieval | 90/90 | 100% (95.9%–100%) | 5.71±0.96 | $0.1468±0.0379 |
 
-| model            | pass@1        | avg steps | avg tokens | avg cost |
-|------------------|:-------------:|:---------:|:----------:|:--------:|
-| claude-opus-4.8  | 100% (12/12)  |    5.9    |   21,529   |  $0.117  |
+Total estimated campaign cost was **$28.49**. Every condition solved every attempt in each
+fixture (expression: 36/36, config loader: 27/27, dependency planner: 27/27).
 
-Full run: **$1.41** total · **18.6 s/task** avg wall-clock. Every verdict is the harness
-independently re-running pytest against the pristine tests — the model never grades itself.
-All three conditions below were rerun on **2026-07-27** from the same commit (`4834227`),
-with one attempt per task. See the [full per-task scorecard](eval/scorecard.md).
+The task set still shows a ceiling effect, so the useful signal is efficiency rather than
+solve-rate separation:
 
-### Ablations
+- **Haiku** was about **3.5× cheaper** than baseline, with 1.89 more steps on average.
+- **Retrieval** saved 0.66 steps on average, but added 3,204 tokens and $0.0149 per paired
+  attempt. On this dataset, the step reduction still does not pay for the injected context.
 
-| variant                            | pass@1        | avg steps | avg cost |
-|------------------------------------|:-------------:|:---------:|:--------:|
-| opus-4.8 (baseline)                | 100% (12/12)  |    5.9    |  $0.117  |
-| haiku-4.5 (weaker / cheaper brain) | 100% (12/12)  |    7.2    |  $0.035  |
-| opus-4.8 + embedding retrieval     | 100% (12/12)  |    5.5    |  $0.171  |
-
-> On this deliberately simple task set all three variants solve every task (a ceiling
-> effect), so the signal is **efficiency, not solve-rate**:
-> - **haiku** matches opus at **~3.3× lower cost** (about 1.3 more steps) — the benchmark
->   doesn't punish the weaker model here.
-> - **embedding retrieval** cuts steps (5.9 → 5.5; e.g. the division-stub task dropped
->   9 → 4 steps, since retrieval hands the agent the exact broken function) but *raises*
->   cost (~+46%): the injected code is re-sent in every turn's history (MVP doesn't trim),
->   so the step savings don't pay for the token overhead — yet. Trimming history or gating
->   injection would flip that.
->
-> Separating variants on solve-rate would need a harder task set (future work). n_attempts=1.
+These are controlled synthetic repairs with three attempts per task, not a claim of universal
+repository repair. See the committed [report](eval/artifacts/multi_repo_v1/report.md),
+[summary](eval/artifacts/multi_repo_v1/summary.json), and all 270
+[attempt records](eval/artifacts/multi_repo_v1/attempts.jsonl).
 
 ## How it works
 
@@ -398,38 +388,27 @@ python serve.py            # → http://127.0.0.1:8000（按 Ctrl-C 停止）
 
 ## 实验结果
 
-> 以下数字来自原始 12 题表达式 fixture 最近一次发布的单次实验。扩展后的 30 题数据集已经通过
-> 完整离线验证；它的三次重复实验会单独发布，避免将新旧结果混在一起。
+正式的 `multi_repo_v1` campaign 对 30 个任务、每种条件各运行三次：共 **270 次独立判定尝试**，
+全部来自同一个干净提交（`acdbc5e`）和同一个固定任务摘要。Harness 错误不会被移出分母；本次为 0。
 
-<!-- 来自 `python cli.py bench`（label=baseline）：12 个受控任务，不启用检索和自我纠正 -->
-
-| 模型 | pass@1 | 平均步数 | 平均 token | 平均成本 |
+| 实验条件 | 已解决尝试 | 解决率（95% Wilson 区间） | 平均步数±标准差 | 平均成本±标准差 |
 |---|:---:|:---:|:---:|:---:|
-| claude-opus-4.8 | 100%（12/12） | 5.9 | 21,529 | $0.117 |
+| opus-4.8 baseline | 90/90 | 100%（95.9%–100%） | 6.37±0.88 | $0.1319±0.0313 |
+| haiku-4.5 | 90/90 | 100%（95.9%–100%） | 8.26±1.47 | $0.0378±0.0131 |
+| opus-4.8 + embedding 检索 | 90/90 | 100%（95.9%–100%） | 5.71±0.96 | $0.1468±0.0379 |
 
-完整运行总成本为 **$1.41**，平均每项任务耗时 **18.6 秒**。每个结果都来自评测器使用
-原始测试独立重新运行 pytest；模型从不为自己打分。下面三组条件均于 **2026-07-27**、
-同一提交（`4834227`）上重新运行，每项任务运行一次。完整明细见
-[逐任务记分卡](eval/scorecard.md)。
+完整 campaign 的估算总成本为 **$28.49**。每种条件在三个 fixture 中都解决了全部尝试
+（表达式：36/36，配置加载器：27/27，依赖规划器：27/27）。
 
-### 消融实验
+任务集仍然存在天花板效应，因此有效信号是效率，而不是解决率差异：
 
-| 实验条件 | pass@1 | 平均步数 | 平均成本 |
-|---|:---:|:---:|:---:|
-| opus-4.8（baseline） | 100%（12/12） | 5.9 | $0.117 |
-| haiku-4.5（能力较弱、成本更低） | 100%（12/12） | 7.2 | $0.035 |
-| opus-4.8 + embedding 检索 | 100%（12/12） | 5.5 | $0.171 |
+- **Haiku** 的成本约比 baseline 低 **3.5 倍**，代价是平均多 1.89 步。
+- **检索**平均减少 0.66 步，但每次成对尝试增加了 3,204 token 和 $0.0149。在当前数据集上，
+  减少的步骤仍不足以抵消注入上下文的成本。
 
-> 在这组刻意保持简单的任务中，三个条件都解决了全部任务，出现了天花板效应；因此有意义的
-> 信号是**效率，而不是解决率**：
->
-> - **Haiku** 以约低 **3.3 倍的成本**达到与 Opus 相同的解决率，代价是平均多约 1.3 步；
->   这个任务集还不足以拉开弱模型和强模型的解决率差距。
-> - **Embedding 检索**将平均步数从 5.9 降到 5.5。例如 division-stub 任务从 9 步降到 4 步，
->   因为检索直接向 Agent 提供了相关函数；但成本上升约 46%。注入的代码会在后续每轮历史中
->   重复发送，节省的步骤不足以抵消 token 开销。未来可以通过裁剪历史或按需启用检索来改善。
->
-> 如果要在解决率上区分不同条件，需要更困难的任务集。当前 `n_attempts=1`。
+这些是每题三次的受控合成修复实验，不代表可以普遍修复任意仓库。完整数据见已提交的
+[实验报告](eval/artifacts/multi_repo_v1/report.md)、[统计摘要](eval/artifacts/multi_repo_v1/summary.json)
+和全部 270 条[尝试记录](eval/artifacts/multi_repo_v1/attempts.jsonl)。
 
 ## 工作原理
 

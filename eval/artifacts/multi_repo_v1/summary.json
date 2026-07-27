@@ -1,0 +1,3383 @@
+{
+  "attempts_per_task": 3,
+  "campaign": "multi_repo_v1",
+  "n_attempt_records": 270,
+  "paired_against_baseline": {
+    "haiku": {
+      "cost_usd_mean_delta": -0.09415214444444445,
+      "pairs": 90,
+      "solve_rate_delta": 0.0,
+      "steps_mean_delta": 1.8888888888888888,
+      "tokens_mean_delta": 9700.744444444445,
+      "wall_s_mean_delta": -1.4579262981444536
+    },
+    "retrieval": {
+      "cost_usd_mean_delta": 0.014906277777777779,
+      "pairs": 90,
+      "solve_rate_delta": 0.0,
+      "steps_mean_delta": -0.6555555555555556,
+      "tokens_mean_delta": 3204.322222222222,
+      "wall_s_mean_delta": -1.565680825455536
+    }
+  },
+  "repo_commit": "acdbc5e",
+  "schema_version": 1,
+  "task_digest_sha256": "c834ce4ed0fbfd799da203df3e0afcf0cb8014736b6c563edae1fc37277cb8c2",
+  "total_cost_usd": 28.49147699999999,
+  "variants": {
+    "baseline": {
+      "by_difficulty": {
+        "basic": {
+          "attempts": 51,
+          "cost_usd": {
+            "mean": 0.12410313725490195,
+            "median": 0.114295,
+            "stdev": 0.02916604035450792
+          },
+          "invalid_or_error": 0,
+          "solve_rate": 1.0,
+          "solve_rate_wilson_95": [
+            0.9299533801014687,
+            1.0
+          ],
+          "solved": 51,
+          "steps": {
+            "mean": 6.137254901960785,
+            "median": 6.0,
+            "stdev": 0.8489901729263362
+          },
+          "tokens": {
+            "mean": 22791.450980392157,
+            "median": 20934.0,
+            "stdev": 5473.645367810105
+          },
+          "wall_s": {
+            "mean": 19.89494483986274,
+            "median": 18.797401207999997,
+            "stdev": 3.963657959860009
+          }
+        },
+        "hard": {
+          "attempts": 9,
+          "cost_usd": {
+            "mean": 0.1417677777777778,
+            "median": 0.11835999999999999,
+            "stdev": 0.03715985250501466
+          },
+          "invalid_or_error": 0,
+          "solve_rate": 1.0,
+          "solve_rate_wilson_95": [
+            0.7008549515804559,
+            1.0
+          ],
+          "solved": 9,
+          "steps": {
+            "mean": 6.666666666666667,
+            "median": 6.0,
+            "stdev": 1.0
+          },
+          "tokens": {
+            "mean": 26150.0,
+            "median": 21752.0,
+            "stdev": 6948.562998922871
+          },
+          "wall_s": {
+            "mean": 23.28137247233336,
+            "median": 18.67134791600006,
+            "stdev": 7.403634807462307
+          }
+        },
+        "medium": {
+          "attempts": 30,
+          "cost_usd": {
+            "mean": 0.14231216666666666,
+            "median": 0.135045,
+            "stdev": 0.030188426866854166
+          },
+          "invalid_or_error": 0,
+          "solve_rate": 1.0,
+          "solve_rate_wilson_95": [
+            0.8864866068260312,
+            0.9999999999999999
+          ],
+          "solved": 30,
+          "steps": {
+            "mean": 6.666666666666667,
+            "median": 7.0,
+            "stdev": 0.802295557085754
+          },
+          "tokens": {
+            "mean": 26032.566666666666,
+            "median": 24699.0,
+            "stdev": 5582.676775361521
+          },
+          "wall_s": {
+            "mean": 21.527687286100015,
+            "median": 20.67036500050017,
+            "stdev": 4.551149482826892
+          }
+        }
+      },
+      "by_fixture": {
+        "config_loader": {
+          "attempts": 27,
+          "cost_usd": {
+            "mean": 0.12677962962962963,
+            "median": 0.11687499999999999,
+            "stdev": 0.02465547711525021
+          },
+          "invalid_or_error": 0,
+          "solve_rate": 1.0,
+          "solve_rate_wilson_95": [
+            0.8754449702581328,
+            0.9999999999999998
+          ],
+          "solved": 27,
+          "steps": {
+            "mean": 6.296296296296297,
+            "median": 6.0,
+            "stdev": 0.6085806194501846
+          },
+          "tokens": {
+            "mean": 23191.777777777777,
+            "median": 21325.0,
+            "stdev": 4551.239546569309
+          },
+          "wall_s": {
+            "mean": 20.033495868740747,
+            "median": 18.808090041000014,
+            "stdev": 3.304542498975614
+          }
+        },
+        "dependency_planner": {
+          "attempts": 27,
+          "cost_usd": {
+            "mean": 0.1566109259259259,
+            "median": 0.16226,
+            "stdev": 0.02994616522377593
+          },
+          "invalid_or_error": 0,
+          "solve_rate": 1.0,
+          "solve_rate_wilson_95": [
+            0.8754449702581328,
+            0.9999999999999998
+          ],
+          "solved": 27,
+          "steps": {
+            "mean": 7.037037037037037,
+            "median": 7.0,
+            "stdev": 0.7586162241203225
+          },
+          "tokens": {
+            "mean": 28789.0,
+            "median": 29948.0,
+            "stdev": 5577.710786280032
+          },
+          "wall_s": {
+            "mean": 23.841818708333356,
+            "median": 22.04009479199999,
+            "stdev": 5.993368021080038
+          }
+        },
+        "expression": {
+          "attempts": 36,
+          "cost_usd": {
+            "mean": 0.11730527777777779,
+            "median": 0.11079499999999999,
+            "stdev": 0.0257755772540166
+          },
+          "invalid_or_error": 0,
+          "solve_rate": 1.0,
+          "solve_rate_wilson_95": [
+            0.9035813714055363,
+            1.0
+          ],
+          "solved": 36,
+          "steps": {
+            "mean": 5.916666666666667,
+            "median": 6.0,
+            "stdev": 0.8409178658720822
+          },
+          "tokens": {
+            "mean": 21533.61111111111,
+            "median": 20497.0,
+            "stdev": 4854.612212129691
+          },
+          "wall_s": {
+            "mean": 19.03810178016666,
+            "median": 18.27042075050002,
+            "stdev": 3.128214012428906
+          }
+        }
+      },
+      "by_task": {
+        "001_mul_precedence": {
+          "attempts": 3,
+          "cost_usd": {
+            "mean": 0.11907666666666666,
+            "median": 0.11746000000000001,
+            "stdev": 0.004422469144418454
+          },
+          "invalid_or_error": 0,
+          "solve_rate": 1.0,
+          "solve_rate_wilson_95": [
+            0.4385029682449546,
+            1.0
+          ],
+          "solved": 3,
+          "steps": {
+            "mean": 5.333333333333333,
+            "median": 5.0,
+            "stdev": 0.5773502691896257
+          },
+          "tokens": {
+            "mean": 21368.666666666668,
+            "median": 20892.0,
+            "stdev": 991.0647472962265
+          },
+          "wall_s": {
+            "mean": 19.586056500333335,
+            "median": 18.126952834,
+            "stdev": 2.9055144590549973
+          }
+        },
+        "002_eval_division_stub": {
+          "attempts": 3,
+          "cost_usd": {
+            "mean": 0.17304833333333333,
+            "median": 0.16853999999999997,
+            "stdev": 0.024915313731384836
+          },
+          "invalid_or_error": 0,
+          "solve_rate": 1.0,
+          "solve_rate_wilson_95": [
+            0.4385029682449546,
+            1.0
+          ],
+          "solved": 3,
+          "steps": {
+            "mean": 8.0,
+            "median": 8.0,
+            "stdev": 1.0
+          },
+          "tokens": {
+            "mean": 31881.666666666668,
+            "median": 31176.0,
+            "stdev": 4683.542071267571
+          },
+          "wall_s": {
+            "mean": 24.433566652666666,
+            "median": 25.561795416999985,
+            "stdev": 2.257288890877497
+          }
+        },
+        "003_multidigit_number": {
+          "attempts": 3,
+          "cost_usd": {
+            "mean": 0.161845,
+            "median": 0.16185,
+            "stdev": 0.010932500857534852
+          },
+          "invalid_or_error": 0,
+          "solve_rate": 1.0,
+          "solve_rate_wilson_95": [
+            0.4385029682449546,
+            1.0
+          ],
+          "solved": 3,
+          "steps": {
+            "mean": 6.0,
+            "median": 6.0,
+            "stdev": 1.0
+          },
+          "tokens": {
+            "mean": 29830.333333333332,
+            "median": 29574.0,
+            "stdev": 2299.2416865856735
+          },
+          "wall_s": {
+            "mean": 20.052836652666667,
+            "median": 21.140252083999997,
+            "stdev": 2.4251885304945042
+          }
+        },
+        "004_unary_minus": {
+          "attempts": 3,
+          "cost_usd": {
+            "mean": 0.12144,
+            "median": 0.121065,
+            "stdev": 0.0006712860791048838
+          },
+          "invalid_or_error": 0,
+          "solve_rate": 1.0,
+          "solve_rate_wilson_95": [
+            0.4385029682449546,
+            1.0
+          ],
+          "solved": 3,
+          "steps": {
+            "mean": 6.0,
+            "median": 6.0,
+            "stdev": 0.0
+          },
+          "tokens": {
+            "mean": 22704.0,
+            "median": 22689.0,
+            "stdev": 26.851443164195103
+          },
+          "wall_s": {
+            "mean": 17.61601137500001,
+            "median": 17.21659495800003,
+            "stdev": 1.222349042923674
+          }
+        },
+        "005_eval_negation_stub": {
+          "attempts": 3,
+          "cost_usd": {
+            "mean": 0.08787333333333332,
+            "median": 0.09049499999999999,
+            "stdev": 0.005271494886019845
+          },
+          "invalid_or_error": 0,
+          "solve_rate": 1.0,
+          "solve_rate_wilson_95": [
+            0.4385029682449546,
+            1.0
+          ],
+          "solved": 3,
+          "steps": {
+            "mean": 5.666666666666667,
+            "median": 6.0,
+            "stdev": 0.5773502691896257
+          },
+          "tokens": {
+            "mean": 15837.333333333334,
+            "median": 16431.0,
+            "stdev": 1056.9684637364226
+          },
+          "wall_s": {
+            "mean": 18.699964805333327,
+            "median": 16.616331666000008,
+            "stdev": 4.097498356154277
+          }
+        },
+        "006_eval_subtraction": {
+          "attempts": 3,
+          "cost_usd": {
+            "mean": 0.10880333333333332,
+            "median": 0.108595,
+            "stdev": 0.000734988662044063
+          },
+          "invalid_or_error": 0,
+          "solve_rate": 1.0,
+          "solve_rate_wilson_95": [
+            0.4385029682449546,
+            1.0
+          ],
+          "solved": 3,
+          "steps": {
+            "mean": 6.0,
+            "median": 6.0,
+            "stdev": 0.0
+          },
+          "tokens": {
+            "mean": 20255.333333333332,
+            "median": 20247.0,
+            "stdev": 29.399546481762833
+          },
+          "wall_s": {
+            "mean": 17.780404458333333,
+            "median": 18.059642583000027,
+            "stdev": 1.1816262455907867
+          }
+        },
+        "007_eval_multiplication": {
+          "attempts": 3,
+          "cost_usd": {
+            "mean": 0.10934833333333333,
+            "median": 0.11196999999999999,
+            "stdev": 0.00513652687458493
+          },
+          "invalid_or_error": 0,
+          "solve_rate": 1.0,
+          "solve_rate_wilson_95": [
+            0.4385029682449546,
+            1.0
+          ],
+          "solved": 3,
+          "steps": {
+            "mean": 5.666666666666667,
+            "median": 6.0,
+            "stdev": 0.5773502691896257
+          },
+          "tokens": {
+            "mean": 20340.333333333332,
+            "median": 20934.0,
+            "stdev": 1051.7301618444405
+          },
+          "wall_s": {
+            "mean": 16.520823208666666,
+            "median": 16.888035583999965,
+            "stdev": 2.1008804872597793
+          }
+        },
+        "008_tokenize_float": {
+          "attempts": 3,
+          "cost_usd": {
+            "mean": 0.10284833333333332,
+            "median": 0.100905,
+            "stdev": 0.004055676063658601
+          },
+          "invalid_or_error": 0,
+          "solve_rate": 1.0,
+          "solve_rate_wilson_95": [
+            0.4385029682449546,
+            1.0
+          ],
+          "solved": 3,
+          "steps": {
+            "mean": 6.0,
+            "median": 6.0,
+            "stdev": 0.0
+          },
+          "tokens": {
+            "mean": 18811.0,
+            "median": 18193.0,
+            "stdev": 1097.3636589572302
+          },
+          "wall_s": {
+            "mean": 18.851039528,
+            "median": 18.688415167000016,
+            "stdev": 3.4376534669526095
+          }
+        },
+        "009_bare_dot": {
+          "attempts": 3,
+          "cost_usd": {
+            "mean": 0.10945333333333333,
+            "median": 0.10665999999999999,
+            "stdev": 0.0056220688659365725
+          },
+          "invalid_or_error": 0,
+          "solve_rate": 1.0,
+          "solve_rate_wilson_95": [
+            0.4385029682449546,
+            1.0
+          ],
+          "solved": 3,
+          "steps": {
+            "mean": 5.333333333333333,
+            "median": 5.0,
+            "stdev": 0.5773502691896257
+          },
+          "tokens": {
+            "mean": 19658.666666666668,
+            "median": 19108.0,
+            "stdev": 1117.831084436881
+          },
+          "wall_s": {
+            "mean": 17.842023319666662,
+            "median": 17.78441112500002,
+            "stdev": 0.984936534663461
+          }
+        },
+        "010_tokenize_ops": {
+          "attempts": 3,
+          "cost_usd": {
+            "mean": 0.09116333333333333,
+            "median": 0.091255,
+            "stdev": 0.00018085445345175194
+          },
+          "invalid_or_error": 0,
+          "solve_rate": 1.0,
+          "solve_rate_wilson_95": [
+            0.4385029682449546,
+            1.0
+          ],
+          "solved": 3,
+          "steps": {
+            "mean": 6.0,
+            "median": 6.0,
+            "stdev": 0.0
+          },
+          "tokens": {
+            "mean": 16415.333333333332,
+            "median": 16419.0,
+            "stdev": 7.234178138070235
+          },
+          "wall_s": {
+            "mean": 22.451734916333294,
+            "median": 22.246749540999986,
+            "stdev": 2.493569444922903
+          }
+        },
+        "011_parser_trailing": {
+          "attempts": 3,
+          "cost_usd": {
+            "mean": 0.11154166666666666,
+            "median": 0.114295,
+            "stdev": 0.005498877915841861
+          },
+          "invalid_or_error": 0,
+          "solve_rate": 1.0,
+          "solve_rate_wilson_95": [
+            0.4385029682449546,
+            1.0
+          ],
+          "solved": 3,
+          "steps": {
+            "mean": 5.666666666666667,
+            "median": 6.0,
+            "stdev": 0.5773502691896257
+          },
+          "tokens": {
+            "mean": 20547.0,
+            "median": 21147.0,
+            "stdev": 1067.9367958826028
+          },
+          "wall_s": {
+            "mean": 18.043443125333322,
+            "median": 17.725204167000015,
+            "stdev": 1.7694415280277118
+          }
+        },
+        "012_eval_addition": {
+          "attempts": 3,
+          "cost_usd": {
+            "mean": 0.11122166666666666,
+            "median": 0.10827500000000001,
+            "stdev": 0.005212404275699775
+          },
+          "invalid_or_error": 0,
+          "solve_rate": 1.0,
+          "solve_rate_wilson_95": [
+            0.4385029682449546,
+            1.0
+          ],
+          "solved": 3,
+          "steps": {
+            "mean": 5.333333333333333,
+            "median": 5.0,
+            "stdev": 0.5773502691896257
+          },
+          "tokens": {
+            "mean": 20753.666666666668,
+            "median": 20147.0,
+            "stdev": 1055.1105787230708
+          },
+          "wall_s": {
+            "mean": 16.579316819666662,
+            "median": 14.806376500000056,
+            "stdev": 3.824511153351679
+          }
+        },
+        "013_config_nested_merge": {
+          "attempts": 3,
+          "cost_usd": {
+            "mean": 0.12186000000000001,
+            "median": 0.125045,
+            "stdev": 0.005538246563669771
+          },
+          "invalid_or_error": 0,
+          "solve_rate": 1.0,
+          "solve_rate_wilson_95": [
+            0.4385029682449546,
+            1.0
+          ],
+          "solved": 3,
+          "steps": {
+            "mean": 6.0,
+            "median": 6.0,
+            "stdev": 0.0
+          },
+          "tokens": {
+            "mean": 22249.333333333332,
+            "median": 22757.0,
+            "stdev": 880.170627397514
+          },
+          "wall_s": {
+            "mean": 17.49128663866668,
+            "median": 17.554476625000007,
+            "stdev": 0.47171242584266393
+          }
+        },
+        "014_config_input_mutation": {
+          "attempts": 3,
+          "cost_usd": {
+            "mean": 0.11806,
+            "median": 0.116485,
+            "stdev": 0.003076406182544823
+          },
+          "invalid_or_error": 0,
+          "solve_rate": 1.0,
+          "solve_rate_wilson_95": [
+            0.4385029682449546,
+            1.0
+          ],
+          "solved": 3,
+          "steps": {
+            "mean": 6.333333333333333,
+            "median": 6.0,
+            "stdev": 0.5773502691896257
+          },
+          "tokens": {
+            "mean": 21741.333333333332,
+            "median": 21325.0,
+            "stdev": 765.7025096820131
+          },
+          "wall_s": {
+            "mean": 19.076205624666652,
+            "median": 18.808090041000014,
+            "stdev": 1.9303900792230884
+          }
+        },
+        "015_config_list_policy": {
+          "attempts": 3,
+          "cost_usd": {
+            "mean": 0.14558666666666667,
+            "median": 0.11794000000000002,
+            "stdev": 0.05901048939242356
+          },
+          "invalid_or_error": 0,
+          "solve_rate": 1.0,
+          "solve_rate_wilson_95": [
+            0.4385029682449546,
+            1.0
+          ],
+          "solved": 3,
+          "steps": {
+            "mean": 6.666666666666667,
+            "median": 6.0,
+            "stdev": 1.1547005383792515
+          },
+          "tokens": {
+            "mean": 26457.333333333332,
+            "median": 21168.0,
+            "stdev": 11136.677526683321
+          },
+          "wall_s": {
+            "mean": 21.831749305333272,
+            "median": 18.729853374999948,
+            "stdev": 6.567030674382178
+          }
+        },
+        "016_config_missing_env": {
+          "attempts": 3,
+          "cost_usd": {
+            "mean": 0.12282166666666666,
+            "median": 0.11315,
+            "stdev": 0.016838494835742696
+          },
+          "invalid_or_error": 0,
+          "solve_rate": 1.0,
+          "solve_rate_wilson_95": [
+            0.4385029682449546,
+            1.0
+          ],
+          "solved": 3,
+          "steps": {
+            "mean": 6.333333333333333,
+            "median": 6.0,
+            "stdev": 0.5773502691896257
+          },
+          "tokens": {
+            "mean": 22603.0,
+            "median": 20730.0,
+            "stdev": 3247.5958800318735
+          },
+          "wall_s": {
+            "mean": 19.63758136066671,
+            "median": 19.927699541000038,
+            "stdev": 0.7866716083418599
+          }
+        },
+        "017_config_env_default": {
+          "attempts": 3,
+          "cost_usd": {
+            "mean": 0.11292666666666666,
+            "median": 0.111215,
+            "stdev": 0.003429418075028666
+          },
+          "invalid_or_error": 0,
+          "solve_rate": 1.0,
+          "solve_rate_wilson_95": [
+            0.4385029682449546,
+            1.0
+          ],
+          "solved": 3,
+          "steps": {
+            "mean": 6.333333333333333,
+            "median": 6.0,
+            "stdev": 0.5773502691896257
+          },
+          "tokens": {
+            "mean": 20750.666666666668,
+            "median": 20303.0,
+            "stdev": 793.6374067124945
+          },
+          "wall_s": {
+            "mean": 18.80237683333333,
+            "median": 19.063944708999998,
+            "stdev": 0.598094289914289
+          }
+        },
+        "018_config_recursive_interpolation": {
+          "attempts": 3,
+          "cost_usd": {
+            "mean": 0.10966166666666666,
+            "median": 0.11305,
+            "stdev": 0.006020955765767867
+          },
+          "invalid_or_error": 0,
+          "solve_rate": 1.0,
+          "solve_rate_wilson_95": [
+            0.4385029682449546,
+            1.0
+          ],
+          "solved": 3,
+          "steps": {
+            "mean": 6.0,
+            "median": 6.0,
+            "stdev": 0.0
+          },
+          "tokens": {
+            "mean": 20121.666666666668,
+            "median": 20706.0,
+            "stdev": 1018.1632154685875
+          },
+          "wall_s": {
+            "mean": 17.407373319666664,
+            "median": 17.60384804199998,
+            "stdev": 0.3827812174931128
+          }
+        },
+        "019_config_relative_include": {
+          "attempts": 3,
+          "cost_usd": {
+            "mean": 0.12709166666666666,
+            "median": 0.12585,
+            "stdev": 0.017879864606124216
+          },
+          "invalid_or_error": 0,
+          "solve_rate": 1.0,
+          "solve_rate_wilson_95": [
+            0.4385029682449546,
+            1.0
+          ],
+          "solved": 3,
+          "steps": {
+            "mean": 5.666666666666667,
+            "median": 6.0,
+            "stdev": 0.5773502691896257
+          },
+          "tokens": {
+            "mean": 23226.333333333332,
+            "median": 23134.0,
+            "stdev": 3300.46880508411
+          },
+          "wall_s": {
+            "mean": 22.180324930666757,
+            "median": 20.858595667000145,
+            "stdev": 4.659591780242882
+          }
+        },
+        "020_config_include_cycle": {
+          "attempts": 3,
+          "cost_usd": {
+            "mean": 0.15493333333333334,
+            "median": 0.162705,
+            "stdev": 0.03032872991625817
+          },
+          "invalid_or_error": 0,
+          "solve_rate": 1.0,
+          "solve_rate_wilson_95": [
+            0.4385029682449546,
+            1.0
+          ],
+          "solved": 3,
+          "steps": {
+            "mean": 6.666666666666667,
+            "median": 7.0,
+            "stdev": 0.5773502691896257
+          },
+          "tokens": {
+            "mean": 28258.666666666668,
+            "median": 29629.0,
+            "stdev": 5687.685498806463
+          },
+          "wall_s": {
+            "mean": 22.332825319666654,
+            "median": 23.214277208999874,
+            "stdev": 1.6889234224641114
+          }
+        },
+        "021_config_include_precedence": {
+          "attempts": 3,
+          "cost_usd": {
+            "mean": 0.128075,
+            "median": 0.135705,
+            "stdev": 0.013628979235437984
+          },
+          "invalid_or_error": 0,
+          "solve_rate": 1.0,
+          "solve_rate_wilson_95": [
+            0.4385029682449546,
+            1.0
+          ],
+          "solved": 3,
+          "steps": {
+            "mean": 6.666666666666667,
+            "median": 7.0,
+            "stdev": 0.5773502691896257
+          },
+          "tokens": {
+            "mean": 23317.666666666668,
+            "median": 24701.0,
+            "stdev": 2412.476804724417
+          },
+          "wall_s": {
+            "mean": 21.541739486000022,
+            "median": 21.650475791999952,
+            "stdev": 4.708414446364554
+          }
+        },
+        "022_planner_duplicate_ids": {
+          "attempts": 3,
+          "cost_usd": {
+            "mean": 0.15735333333333335,
+            "median": 0.164725,
+            "stdev": 0.013085473179573346
+          },
+          "invalid_or_error": 0,
+          "solve_rate": 1.0,
+          "solve_rate_wilson_95": [
+            0.4385029682449546,
+            1.0
+          ],
+          "solved": 3,
+          "steps": {
+            "mean": 7.0,
+            "median": 7.0,
+            "stdev": 0.0
+          },
+          "tokens": {
+            "mean": 29104.0,
+            "median": 30273.0,
+            "stdev": 2380.5022579279357
+          },
+          "wall_s": {
+            "mean": 22.48574433300003,
+            "median": 23.861462957999947,
+            "stdev": 3.424272953761138
+          }
+        },
+        "023_planner_negative_duration": {
+          "attempts": 3,
+          "cost_usd": {
+            "mean": 0.16340166666666667,
+            "median": 0.162885,
+            "stdev": 0.001469764720400314
+          },
+          "invalid_or_error": 0,
+          "solve_rate": 1.0,
+          "solve_rate_wilson_95": [
+            0.4385029682449546,
+            1.0
+          ],
+          "solved": 3,
+          "steps": {
+            "mean": 7.0,
+            "median": 7.0,
+            "stdev": 0.0
+          },
+          "tokens": {
+            "mean": 30136.333333333332,
+            "median": 29973.0,
+            "stdev": 304.80868316590545
+          },
+          "wall_s": {
+            "mean": 26.99938908333335,
+            "median": 24.36804287500013,
+            "stdev": 7.69261525575462
+          }
+        },
+        "024_planner_missing_dependency": {
+          "attempts": 3,
+          "cost_usd": {
+            "mean": 0.17062333333333335,
+            "median": 0.17912,
+            "stdev": 0.017266424306535886
+          },
+          "invalid_or_error": 0,
+          "solve_rate": 1.0,
+          "solve_rate_wilson_95": [
+            0.4385029682449546,
+            1.0
+          ],
+          "solved": 3,
+          "steps": {
+            "mean": 7.666666666666667,
+            "median": 8.0,
+            "stdev": 0.5773502691896257
+          },
+          "tokens": {
+            "mean": 30914.0,
+            "median": 32464.0,
+            "stdev": 3026.0236284602934
+          },
+          "wall_s": {
+            "mean": 23.956316124666728,
+            "median": 23.811032750000095,
+            "stdev": 3.1578910894152084
+          }
+        },
+        "025_planner_deterministic_order": {
+          "attempts": 3,
+          "cost_usd": {
+            "mean": 0.14919666666666667,
+            "median": 0.134385,
+            "stdev": 0.04394143668945445
+          },
+          "invalid_or_error": 0,
+          "solve_rate": 1.0,
+          "solve_rate_wilson_95": [
+            0.4385029682449546,
+            1.0
+          ],
+          "solved": 3,
+          "steps": {
+            "mean": 7.0,
+            "median": 7.0,
+            "stdev": 1.0
+          },
+          "tokens": {
+            "mean": 27591.333333333332,
+            "median": 24697.0,
+            "stdev": 8333.4044863629
+          },
+          "wall_s": {
+            "mean": 23.479966041666632,
+            "median": 19.923337458000105,
+            "stdev": 9.664630439926162
+          }
+        },
+        "026_planner_cycle_detection": {
+          "attempts": 3,
+          "cost_usd": {
+            "mean": 0.1659533333333333,
+            "median": 0.15241,
+            "stdev": 0.026121294155024826
+          },
+          "invalid_or_error": 0,
+          "solve_rate": 1.0,
+          "solve_rate_wilson_95": [
+            0.4385029682449546,
+            1.0
+          ],
+          "solved": 3,
+          "steps": {
+            "mean": 7.333333333333333,
+            "median": 7.0,
+            "stdev": 0.5773502691896257
+          },
+          "tokens": {
+            "mean": 30373.333333333332,
+            "median": 27642.0,
+            "stdev": 5170.758197144141
+          },
+          "wall_s": {
+            "mean": 23.308683375000026,
+            "median": 20.87639883299994,
+            "stdev": 4.55854791727132
+          }
+        },
+        "027_planner_transitive_dependencies": {
+          "attempts": 3,
+          "cost_usd": {
+            "mean": 0.17766666666666664,
+            "median": 0.18011,
+            "stdev": 0.028558498005555783
+          },
+          "invalid_or_error": 0,
+          "solve_rate": 1.0,
+          "solve_rate_wilson_95": [
+            0.4385029682449546,
+            1.0
+          ],
+          "solved": 3,
+          "steps": {
+            "mean": 7.333333333333333,
+            "median": 7.0,
+            "stdev": 0.5773502691896257
+          },
+          "tokens": {
+            "mean": 32532.0,
+            "median": 33170.0,
+            "stdev": 5682.923455405677
+          },
+          "wall_s": {
+            "mean": 24.502152000333353,
+            "median": 22.04009479199999,
+            "stdev": 5.676913339987845
+          }
+        },
+        "028_planner_target_plan": {
+          "attempts": 3,
+          "cost_usd": {
+            "mean": 0.17285833333333334,
+            "median": 0.194305,
+            "stdev": 0.04442858576787397
+          },
+          "invalid_or_error": 0,
+          "solve_rate": 1.0,
+          "solve_rate_wilson_95": [
+            0.4385029682449546,
+            1.0
+          ],
+          "solved": 3,
+          "steps": {
+            "mean": 7.333333333333333,
+            "median": 8.0,
+            "stdev": 1.1547005383792515
+          },
+          "tokens": {
+            "mean": 32051.666666666668,
+            "median": 36173.0,
+            "stdev": 8465.223997823881
+          },
+          "wall_s": {
+            "mean": 31.713456764333312,
+            "median": 29.724156374999893,
+            "stdev": 4.8898963671137095
+          }
+        },
+        "029_planner_execution_layers": {
+          "attempts": 3,
+          "cost_usd": {
+            "mean": 0.11591,
+            "median": 0.11619499999999999,
+            "stdev": 0.0026042225327340953
+          },
+          "invalid_or_error": 0,
+          "solve_rate": 1.0,
+          "solve_rate_wilson_95": [
+            0.4385029682449546,
+            1.0
+          ],
+          "solved": 3,
+          "steps": {
+            "mean": 6.0,
+            "median": 6.0,
+            "stdev": 0.0
+          },
+          "tokens": {
+            "mean": 21375.333333333332,
+            "median": 21207.0,
+            "stdev": 326.81544231161007
+          },
+          "wall_s": {
+            "mean": 18.133633069333353,
+            "median": 18.59891620899998,
+            "stdev": 0.869376390573313
+          }
+        },
+        "030_planner_critical_path": {
+          "attempts": 3,
+          "cost_usd": {
+            "mean": 0.136535,
+            "median": 0.11789999999999999,
+            "stdev": 0.032385080283982626
+          },
+          "invalid_or_error": 0,
+          "solve_rate": 1.0,
+          "solve_rate_wilson_95": [
+            0.4385029682449546,
+            1.0
+          ],
+          "solved": 3,
+          "steps": {
+            "mean": 6.666666666666667,
+            "median": 6.0,
+            "stdev": 1.1547005383792515
+          },
+          "tokens": {
+            "mean": 25023.0,
+            "median": 21708.0,
+            "stdev": 5746.0790979588855
+          },
+          "wall_s": {
+            "mean": 19.99702758333342,
+            "median": 17.54331237500014,
+            "stdev": 5.657654101457134
+          }
+        }
+      },
+      "overall": {
+        "attempts": 90,
+        "cost_usd": {
+          "mean": 0.13193927777777778,
+          "median": 0.11792,
+          "stdev": 0.03130810722230459
+        },
+        "invalid_or_error": 0,
+        "solve_rate": 1.0,
+        "solve_rate_wilson_95": [
+          0.9590643744356734,
+          1.0
+        ],
+        "solved": 90,
+        "steps": {
+          "mean": 6.366666666666666,
+          "median": 6.0,
+          "stdev": 0.8798620933821314
+        },
+        "tokens": {
+          "mean": 24207.67777777778,
+          "median": 21730.0,
+          "stdev": 5829.287505998525
+        },
+        "wall_s": {
+          "mean": 20.777835085188897,
+          "median": 19.14453741699998,
+          "stdev": 4.6660951049824355
+        }
+      }
+    },
+    "haiku": {
+      "by_difficulty": {
+        "basic": {
+          "attempts": 51,
+          "cost_usd": {
+            "mean": 0.03774219607843137,
+            "median": 0.03335,
+            "stdev": 0.016023144283216835
+          },
+          "invalid_or_error": 0,
+          "solve_rate": 1.0,
+          "solve_rate_wilson_95": [
+            0.9299533801014687,
+            1.0
+          ],
+          "solved": 51,
+          "steps": {
+            "mean": 7.980392156862745,
+            "median": 8.0,
+            "stdev": 1.6308304151987278
+          },
+          "tokens": {
+            "mean": 34153.41176470588,
+            "median": 30383.0,
+            "stdev": 15416.837369806392
+          },
+          "wall_s": {
+            "mean": 18.6430489428235,
+            "median": 18.264005250000082,
+            "stdev": 3.898144622611543
+          }
+        },
+        "hard": {
+          "attempts": 9,
+          "cost_usd": {
+            "mean": 0.039515999999999996,
+            "median": 0.03989999999999999,
+            "stdev": 0.0031858390966902276
+          },
+          "invalid_or_error": 0,
+          "solve_rate": 1.0,
+          "solve_rate_wilson_95": [
+            0.7008549515804559,
+            1.0
+          ],
+          "solved": 9,
+          "steps": {
+            "mean": 8.88888888888889,
+            "median": 9.0,
+            "stdev": 0.6009252125773316
+          },
+          "tokens": {
+            "mean": 34916.88888888889,
+            "median": 35560.0,
+            "stdev": 3334.663230539347
+          },
+          "wall_s": {
+            "mean": 20.830139411888872,
+            "median": 20.795945542000027,
+            "stdev": 1.079227120927572
+          }
+        },
+        "medium": {
+          "attempts": 30,
+          "cost_usd": {
+            "mean": 0.03734486666666667,
+            "median": 0.039034,
+            "stdev": 0.008971154581955064
+          },
+          "invalid_or_error": 0,
+          "solve_rate": 1.0,
+          "solve_rate_wilson_95": [
+            0.8864866068260312,
+            0.9999999999999999
+          ],
+          "solved": 30,
+          "steps": {
+            "mean": 8.533333333333333,
+            "median": 9.0,
+            "stdev": 1.2521246311585852
+          },
+          "tokens": {
+            "mean": 33189.4,
+            "median": 34293.0,
+            "stdev": 8284.312056427852
+          },
+          "wall_s": {
+            "mean": 20.017501334766713,
+            "median": 20.182306354000048,
+            "stdev": 3.3976860992064752
+          }
+        }
+      },
+      "by_fixture": {
+        "config_loader": {
+          "attempts": 27,
+          "cost_usd": {
+            "mean": 0.033237333333333334,
+            "median": 0.029498,
+            "stdev": 0.009673218380981268
+          },
+          "invalid_or_error": 0,
+          "solve_rate": 1.0,
+          "solve_rate_wilson_95": [
+            0.8754449702581328,
+            0.9999999999999998
+          ],
+          "solved": 27,
+          "steps": {
+            "mean": 8.296296296296296,
+            "median": 8.0,
+            "stdev": 1.2345916426966952
+          },
+          "tokens": {
+            "mean": 29359.85185185185,
+            "median": 25890.0,
+            "stdev": 9039.306609315117
+          },
+          "wall_s": {
+            "mean": 19.133803756222193,
+            "median": 18.21971674999986,
+            "stdev": 3.1289764401200038
+          }
+        },
+        "dependency_planner": {
+          "attempts": 27,
+          "cost_usd": {
+            "mean": 0.03805985185185185,
+            "median": 0.03974,
+            "stdev": 0.005460431193904179
+          },
+          "invalid_or_error": 0,
+          "solve_rate": 1.0,
+          "solve_rate_wilson_95": [
+            0.8754449702581328,
+            0.9999999999999998
+          ],
+          "solved": 27,
+          "steps": {
+            "mean": 9.0,
+            "median": 9.0,
+            "stdev": 0.9198662110077999
+          },
+          "tokens": {
+            "mean": 33725.18518518518,
+            "median": 34868.0,
+            "stdev": 4975.540759455484
+          },
+          "wall_s": {
+            "mean": 20.543039882666697,
+            "median": 20.611260208000203,
+            "stdev": 2.4599930371288017
+          }
+        },
+        "expression": {
+          "attempts": 36,
+          "cost_usd": {
+            "mean": 0.040994944444444445,
+            "median": 0.0346245,
+            "stdev": 0.017845087696929683
+          },
+          "invalid_or_error": 0,
+          "solve_rate": 1.0,
+          "solve_rate_wilson_95": [
+            0.9035813714055363,
+            1.0
+          ],
+          "solved": 36,
+          "steps": {
+            "mean": 7.666666666666667,
+            "median": 7.0,
+            "stdev": 1.7071279138616748
+          },
+          "tokens": {
+            "mean": 37457.27777777778,
+            "median": 31908.5,
+            "stdev": 17079.545142172024
+          },
+          "wall_s": {
+            "mean": 18.542139238444438,
+            "median": 18.08484618750026,
+            "stdev": 4.431608100350785
+          }
+        }
+      },
+      "by_task": {
+        "001_mul_precedence": {
+          "attempts": 3,
+          "cost_usd": {
+            "mean": 0.03957133333333333,
+            "median": 0.040484,
+            "stdev": 0.0051095033352893835
+          },
+          "invalid_or_error": 0,
+          "solve_rate": 1.0,
+          "solve_rate_wilson_95": [
+            0.4385029682449546,
+            1.0
+          ],
+          "solved": 3,
+          "steps": {
+            "mean": 7.0,
+            "median": 7.0,
+            "stdev": 1.0
+          },
+          "tokens": {
+            "mean": 35502.0,
+            "median": 36684.0,
+            "stdev": 4642.265287550896
+          },
+          "wall_s": {
+            "mean": 17.699411083333263,
+            "median": 18.863231916999894,
+            "stdev": 2.160789952275444
+          }
+        },
+        "002_eval_division_stub": {
+          "attempts": 3,
+          "cost_usd": {
+            "mean": 0.034067999999999994,
+            "median": 0.03335,
+            "stdev": 0.002207389181816385
+          },
+          "invalid_or_error": 0,
+          "solve_rate": 1.0,
+          "solve_rate_wilson_95": [
+            0.4385029682449546,
+            1.0
+          ],
+          "solved": 3,
+          "steps": {
+            "mean": 6.666666666666667,
+            "median": 7.0,
+            "stdev": 0.5773502691896257
+          },
+          "tokens": {
+            "mean": 31412.0,
+            "median": 30546.0,
+            "stdev": 2256.291426212492
+          },
+          "wall_s": {
+            "mean": 14.95175116699996,
+            "median": 15.148399374999826,
+            "stdev": 1.3790657891865694
+          }
+        },
+        "003_multidigit_number": {
+          "attempts": 3,
+          "cost_usd": {
+            "mean": 0.07697866666666667,
+            "median": 0.060087,
+            "stdev": 0.03272960226359821
+          },
+          "invalid_or_error": 0,
+          "solve_rate": 1.0,
+          "solve_rate_wilson_95": [
+            0.4385029682449546,
+            1.0
+          ],
+          "solved": 3,
+          "steps": {
+            "mean": 10.0,
+            "median": 9.0,
+            "stdev": 3.605551275463989
+          },
+          "tokens": {
+            "mean": 70754.66666666667,
+            "median": 54035.0,
+            "stdev": 32214.086861702806
+          },
+          "wall_s": {
+            "mean": 27.523265972666575,
+            "median": 26.364535999999816,
+            "stdev": 6.420817042924042
+          }
+        },
+        "004_unary_minus": {
+          "attempts": 3,
+          "cost_usd": {
+            "mean": 0.07005833333333335,
+            "median": 0.06690700000000001,
+            "stdev": 0.006579691887416411
+          },
+          "invalid_or_error": 0,
+          "solve_rate": 1.0,
+          "solve_rate_wilson_95": [
+            0.4385029682449546,
+            1.0
+          ],
+          "solved": 3,
+          "steps": {
+            "mean": 10.333333333333334,
+            "median": 10.0,
+            "stdev": 0.5773502691896257
+          },
+          "tokens": {
+            "mean": 65966.33333333333,
+            "median": 62851.0,
+            "stdev": 6220.530631170731
+          },
+          "wall_s": {
+            "mean": 24.551331458666482,
+            "median": 25.419715583999732,
+            "stdev": 1.6839914120800252
+          }
+        },
+        "005_eval_negation_stub": {
+          "attempts": 3,
+          "cost_usd": {
+            "mean": 0.028592000000000003,
+            "median": 0.029822,
+            "stdev": 0.005084826349050673
+          },
+          "invalid_or_error": 0,
+          "solve_rate": 1.0,
+          "solve_rate_wilson_95": [
+            0.4385029682449546,
+            1.0
+          ],
+          "solved": 3,
+          "steps": {
+            "mean": 6.0,
+            "median": 6.0,
+            "stdev": 1.0
+          },
+          "tokens": {
+            "mean": 24438.666666666668,
+            "median": 25846.0,
+            "stdev": 3414.8997545071998
+          },
+          "wall_s": {
+            "mean": 15.439874902666967,
+            "median": 17.047243791000255,
+            "stdev": 3.5534960967534106
+          }
+        },
+        "006_eval_subtraction": {
+          "attempts": 3,
+          "cost_usd": {
+            "mean": 0.034332,
+            "median": 0.034442,
+            "stdev": 0.0018204941636819384
+          },
+          "invalid_or_error": 0,
+          "solve_rate": 1.0,
+          "solve_rate_wilson_95": [
+            0.4385029682449546,
+            1.0
+          ],
+          "solved": 3,
+          "steps": {
+            "mean": 7.666666666666667,
+            "median": 8.0,
+            "stdev": 0.5773502691896257
+          },
+          "tokens": {
+            "mean": 31209.333333333332,
+            "median": 31446.0,
+            "stdev": 1391.1809132292367
+          },
+          "wall_s": {
+            "mean": 17.282828319333476,
+            "median": 18.264005250000082,
+            "stdev": 2.0516906765073233
+          }
+        },
+        "007_eval_multiplication": {
+          "attempts": 3,
+          "cost_usd": {
+            "mean": 0.032742,
+            "median": 0.034807,
+            "stdev": 0.00369421507224471
+          },
+          "invalid_or_error": 0,
+          "solve_rate": 1.0,
+          "solve_rate_wilson_95": [
+            0.4385029682449546,
+            1.0
+          ],
+          "solved": 3,
+          "steps": {
+            "mean": 8.333333333333334,
+            "median": 9.0,
+            "stdev": 1.1547005383792515
+          },
+          "tokens": {
+            "mean": 30299.333333333332,
+            "median": 32371.0,
+            "stdev": 3611.6398399249797
+          },
+          "wall_s": {
+            "mean": 17.099897166666626,
+            "median": 16.390448624999863,
+            "stdev": 1.3940122365107963
+          }
+        },
+        "008_tokenize_float": {
+          "attempts": 3,
+          "cost_usd": {
+            "mean": 0.029271666666666668,
+            "median": 0.030456999999999998,
+            "stdev": 0.0023446588948785965
+          },
+          "invalid_or_error": 0,
+          "solve_rate": 1.0,
+          "solve_rate_wilson_95": [
+            0.4385029682449546,
+            1.0
+          ],
+          "solved": 3,
+          "steps": {
+            "mean": 6.666666666666667,
+            "median": 7.0,
+            "stdev": 0.5773502691896257
+          },
+          "tokens": {
+            "mean": 26641.0,
+            "median": 27877.0,
+            "stdev": 2198.220189153034
+          },
+          "wall_s": {
+            "mean": 14.666624916666478,
+            "median": 14.860126749999836,
+            "stdev": 0.5573255067745975
+          }
+        },
+        "009_bare_dot": {
+          "attempts": 3,
+          "cost_usd": {
+            "mean": 0.033441,
+            "median": 0.034407,
+            "stdev": 0.005558317371291423
+          },
+          "invalid_or_error": 0,
+          "solve_rate": 1.0,
+          "solve_rate_wilson_95": [
+            0.4385029682449546,
+            1.0
+          ],
+          "solved": 3,
+          "steps": {
+            "mean": 7.0,
+            "median": 7.0,
+            "stdev": 1.0
+          },
+          "tokens": {
+            "mean": 29637.0,
+            "median": 30611.0,
+            "stdev": 5274.879714268373
+          },
+          "wall_s": {
+            "mean": 18.57434993,
+            "median": 20.261223541000163,
+            "stdev": 3.5392106920276305
+          }
+        },
+        "010_tokenize_ops": {
+          "attempts": 3,
+          "cost_usd": {
+            "mean": 0.029545333333333337,
+            "median": 0.030535,
+            "stdev": 0.0023001457200215224
+          },
+          "invalid_or_error": 0,
+          "solve_rate": 1.0,
+          "solve_rate_wilson_95": [
+            0.4385029682449546,
+            1.0
+          ],
+          "solved": 3,
+          "steps": {
+            "mean": 6.666666666666667,
+            "median": 7.0,
+            "stdev": 0.5773502691896257
+          },
+          "tokens": {
+            "mean": 26896.0,
+            "median": 28107.0,
+            "stdev": 2211.0524643255303
+          },
+          "wall_s": {
+            "mean": 16.84227302766673,
+            "median": 16.48882095800036,
+            "stdev": 2.1103088573099864
+          }
+        },
+        "011_parser_trailing": {
+          "attempts": 3,
+          "cost_usd": {
+            "mean": 0.048091,
+            "median": 0.048898,
+            "stdev": 0.005357281866767885
+          },
+          "invalid_or_error": 0,
+          "solve_rate": 1.0,
+          "solve_rate_wilson_95": [
+            0.4385029682449546,
+            1.0
+          ],
+          "solved": 3,
+          "steps": {
+            "mean": 8.333333333333334,
+            "median": 8.0,
+            "stdev": 0.5773502691896257
+          },
+          "tokens": {
+            "mean": 44643.0,
+            "median": 45438.0,
+            "stdev": 5349.985887831855
+          },
+          "wall_s": {
+            "mean": 20.087962389000193,
+            "median": 20.12220412500028,
+            "stdev": 1.2012106126648747
+          }
+        },
+        "012_eval_addition": {
+          "attempts": 3,
+          "cost_usd": {
+            "mean": 0.035247999999999995,
+            "median": 0.037108999999999996,
+            "stdev": 0.004108784613483651
+          },
+          "invalid_or_error": 0,
+          "solve_rate": 1.0,
+          "solve_rate_wilson_95": [
+            0.4385029682449546,
+            1.0
+          ],
+          "solved": 3,
+          "steps": {
+            "mean": 7.333333333333333,
+            "median": 8.0,
+            "stdev": 1.1547005383792515
+          },
+          "tokens": {
+            "mean": 32088.0,
+            "median": 34305.0,
+            "stdev": 4626.684233876352
+          },
+          "wall_s": {
+            "mean": 17.786100527666502,
+            "median": 17.240262667000025,
+            "stdev": 2.9560874085397195
+          }
+        },
+        "013_config_nested_merge": {
+          "attempts": 3,
+          "cost_usd": {
+            "mean": 0.03698866666666666,
+            "median": 0.038711999999999996,
+            "stdev": 0.003664671517794371
+          },
+          "invalid_or_error": 0,
+          "solve_rate": 1.0,
+          "solve_rate_wilson_95": [
+            0.4385029682449546,
+            1.0
+          ],
+          "solved": 3,
+          "steps": {
+            "mean": 8.333333333333334,
+            "median": 9.0,
+            "stdev": 1.1547005383792515
+          },
+          "tokens": {
+            "mean": 32682.0,
+            "median": 34016.0,
+            "stdev": 3318.5822273977183
+          },
+          "wall_s": {
+            "mean": 20.855622430333216,
+            "median": 22.03996374999997,
+            "stdev": 2.8333682533885582
+          }
+        },
+        "014_config_input_mutation": {
+          "attempts": 3,
+          "cost_usd": {
+            "mean": 0.026544333333333336,
+            "median": 0.027100000000000003,
+            "stdev": 0.0015130645502863845
+          },
+          "invalid_or_error": 0,
+          "solve_rate": 1.0,
+          "solve_rate_wilson_95": [
+            0.4385029682449546,
+            1.0
+          ],
+          "solved": 3,
+          "steps": {
+            "mean": 7.666666666666667,
+            "median": 8.0,
+            "stdev": 0.5773502691896257
+          },
+          "tokens": {
+            "mean": 23061.666666666668,
+            "median": 23604.0,
+            "stdev": 1253.7943744224303
+          },
+          "wall_s": {
+            "mean": 17.579429153000092,
+            "median": 18.057232749999912,
+            "stdev": 0.8448483009898976
+          }
+        },
+        "015_config_list_policy": {
+          "attempts": 3,
+          "cost_usd": {
+            "mean": 0.025017666666666664,
+            "median": 0.025155999999999998,
+            "stdev": 0.001227360718506719
+          },
+          "invalid_or_error": 0,
+          "solve_rate": 1.0,
+          "solve_rate_wilson_95": [
+            0.4385029682449546,
+            1.0
+          ],
+          "solved": 3,
+          "steps": {
+            "mean": 7.333333333333333,
+            "median": 7.0,
+            "stdev": 0.5773502691896257
+          },
+          "tokens": {
+            "mean": 21319.0,
+            "median": 20848.0,
+            "stdev": 1308.6913310632115
+          },
+          "wall_s": {
+            "mean": 17.85986919433314,
+            "median": 18.391157290999672,
+            "stdev": 1.7403751504131315
+          }
+        },
+        "016_config_missing_env": {
+          "attempts": 3,
+          "cost_usd": {
+            "mean": 0.032063,
+            "median": 0.029498,
+            "stdev": 0.004625767503885166
+          },
+          "invalid_or_error": 0,
+          "solve_rate": 1.0,
+          "solve_rate_wilson_95": [
+            0.4385029682449546,
+            1.0
+          ],
+          "solved": 3,
+          "steps": {
+            "mean": 9.333333333333334,
+            "median": 9.0,
+            "stdev": 0.5773502691896257
+          },
+          "tokens": {
+            "mean": 28413.666666666668,
+            "median": 25890.0,
+            "stdev": 4407.541983161741
+          },
+          "wall_s": {
+            "mean": 20.07408690300008,
+            "median": 20.67948879200003,
+            "stdev": 1.6378525324373077
+          }
+        },
+        "017_config_env_default": {
+          "attempts": 3,
+          "cost_usd": {
+            "mean": 0.026228,
+            "median": 0.025535000000000002,
+            "stdev": 0.0015540620965714322
+          },
+          "invalid_or_error": 0,
+          "solve_rate": 1.0,
+          "solve_rate_wilson_95": [
+            0.4385029682449546,
+            1.0
+          ],
+          "solved": 3,
+          "steps": {
+            "mean": 8.333333333333334,
+            "median": 8.0,
+            "stdev": 0.5773502691896257
+          },
+          "tokens": {
+            "mean": 23008.0,
+            "median": 22139.0,
+            "stdev": 1506.8845343953863
+          },
+          "wall_s": {
+            "mean": 17.100007277666464,
+            "median": 17.12717441599989,
+            "stdev": 0.21894817601794378
+          }
+        },
+        "018_config_recursive_interpolation": {
+          "attempts": 3,
+          "cost_usd": {
+            "mean": 0.023065000000000002,
+            "median": 0.023292,
+            "stdev": 0.0028293379084160294
+          },
+          "invalid_or_error": 0,
+          "solve_rate": 1.0,
+          "solve_rate_wilson_95": [
+            0.4385029682449546,
+            1.0
+          ],
+          "solved": 3,
+          "steps": {
+            "mean": 7.0,
+            "median": 7.0,
+            "stdev": 1.0
+          },
+          "tokens": {
+            "mean": 19962.333333333332,
+            "median": 19972.0,
+            "stdev": 2672.5131119104603
+          },
+          "wall_s": {
+            "mean": 14.475356528000097,
+            "median": 15.352536792000137,
+            "stdev": 1.8255552270573565
+          }
+        },
+        "019_config_relative_include": {
+          "attempts": 3,
+          "cost_usd": {
+            "mean": 0.043737,
+            "median": 0.039674,
+            "stdev": 0.01609873805613347
+          },
+          "invalid_or_error": 0,
+          "solve_rate": 1.0,
+          "solve_rate_wilson_95": [
+            0.4385029682449546,
+            1.0
+          ],
+          "solved": 3,
+          "steps": {
+            "mean": 8.333333333333334,
+            "median": 8.0,
+            "stdev": 2.516611478423583
+          },
+          "tokens": {
+            "mean": 38978.333333333336,
+            "median": 34570.0,
+            "stdev": 15082.669668640672
+          },
+          "wall_s": {
+            "mean": 21.03324834733318,
+            "median": 21.046142624999902,
+            "stdev": 4.771985607022199
+          }
+        },
+        "020_config_include_cycle": {
+          "attempts": 3,
+          "cost_usd": {
+            "mean": 0.04131233333333333,
+            "median": 0.042277,
+            "stdev": 0.0016942881494401553
+          },
+          "invalid_or_error": 0,
+          "solve_rate": 1.0,
+          "solve_rate_wilson_95": [
+            0.4385029682449546,
+            1.0
+          ],
+          "solved": 3,
+          "steps": {
+            "mean": 8.666666666666666,
+            "median": 9.0,
+            "stdev": 0.5773502691896257
+          },
+          "tokens": {
+            "mean": 37817.666666666664,
+            "median": 38701.0,
+            "stdev": 1570.8571969893806
+          },
+          "wall_s": {
+            "mean": 20.113666555666896,
+            "median": 20.08451425000021,
+            "stdev": 1.9317284034396403
+          }
+        },
+        "021_config_include_precedence": {
+          "attempts": 3,
+          "cost_usd": {
+            "mean": 0.04418,
+            "median": 0.046866000000000005,
+            "stdev": 0.0064752448602350176
+          },
+          "invalid_or_error": 0,
+          "solve_rate": 1.0,
+          "solve_rate_wilson_95": [
+            0.4385029682449546,
+            1.0
+          ],
+          "solved": 3,
+          "steps": {
+            "mean": 9.666666666666666,
+            "median": 10.0,
+            "stdev": 0.5773502691896257
+          },
+          "tokens": {
+            "mean": 38996.0,
+            "median": 41882.0,
+            "stdev": 6033.061246166824
+          },
+          "wall_s": {
+            "mean": 23.112947416666582,
+            "median": 23.626220042000114,
+            "stdev": 1.3224695875600596
+          }
+        },
+        "022_planner_duplicate_ids": {
+          "attempts": 3,
+          "cost_usd": {
+            "mean": 0.029982666666666668,
+            "median": 0.027122000000000004,
+            "stdev": 0.005582792252388879
+          },
+          "invalid_or_error": 0,
+          "solve_rate": 1.0,
+          "solve_rate_wilson_95": [
+            0.4385029682449546,
+            1.0
+          ],
+          "solved": 3,
+          "steps": {
+            "mean": 8.666666666666666,
+            "median": 8.0,
+            "stdev": 1.1547005383792515
+          },
+          "tokens": {
+            "mean": 26257.333333333332,
+            "median": 23930.0,
+            "stdev": 4311.157771797888
+          },
+          "wall_s": {
+            "mean": 18.25764168066659,
+            "median": 16.403680124999937,
+            "stdev": 3.403304633241441
+          }
+        },
+        "023_planner_negative_duration": {
+          "attempts": 3,
+          "cost_usd": {
+            "mean": 0.03638666666666667,
+            "median": 0.035618,
+            "stdev": 0.0039475330693147246
+          },
+          "invalid_or_error": 0,
+          "solve_rate": 1.0,
+          "solve_rate_wilson_95": [
+            0.4385029682449546,
+            1.0
+          ],
+          "solved": 3,
+          "steps": {
+            "mean": 10.0,
+            "median": 10.0,
+            "stdev": 1.0
+          },
+          "tokens": {
+            "mean": 32122.666666666668,
+            "median": 31174.0,
+            "stdev": 4002.232543635281
+          },
+          "wall_s": {
+            "mean": 21.134556111000013,
+            "median": 21.71856204100004,
+            "stdev": 1.257152499719688
+          }
+        },
+        "024_planner_missing_dependency": {
+          "attempts": 3,
+          "cost_usd": {
+            "mean": 0.04046566666666667,
+            "median": 0.043124,
+            "stdev": 0.00489735217575103
+          },
+          "invalid_or_error": 0,
+          "solve_rate": 1.0,
+          "solve_rate_wilson_95": [
+            0.4385029682449546,
+            1.0
+          ],
+          "solved": 3,
+          "steps": {
+            "mean": 9.333333333333334,
+            "median": 10.0,
+            "stdev": 1.1547005383792515
+          },
+          "tokens": {
+            "mean": 36799.0,
+            "median": 39528.0,
+            "stdev": 4784.907627112565
+          },
+          "wall_s": {
+            "mean": 19.831446958333192,
+            "median": 20.280098457999884,
+            "stdev": 1.5409401550918411
+          }
+        },
+        "025_planner_deterministic_order": {
+          "attempts": 3,
+          "cost_usd": {
+            "mean": 0.031986999999999995,
+            "median": 0.031398999999999996,
+            "stdev": 0.002617020634232753
+          },
+          "invalid_or_error": 0,
+          "solve_rate": 1.0,
+          "solve_rate_wilson_95": [
+            0.4385029682449546,
+            1.0
+          ],
+          "solved": 3,
+          "steps": {
+            "mean": 8.0,
+            "median": 8.0,
+            "stdev": 1.0
+          },
+          "tokens": {
+            "mean": 28507.0,
+            "median": 28275.0,
+            "stdev": 2620.7130709026505
+          },
+          "wall_s": {
+            "mean": 17.748145305666792,
+            "median": 18.476731917000052,
+            "stdev": 1.4856578989629392
+          }
+        },
+        "026_planner_cycle_detection": {
+          "attempts": 3,
+          "cost_usd": {
+            "mean": 0.045636333333333334,
+            "median": 0.046251,
+            "stdev": 0.0012790349226402449
+          },
+          "invalid_or_error": 0,
+          "solve_rate": 1.0,
+          "solve_rate_wilson_95": [
+            0.4385029682449546,
+            1.0
+          ],
+          "solved": 3,
+          "steps": {
+            "mean": 9.666666666666666,
+            "median": 10.0,
+            "stdev": 0.5773502691896257
+          },
+          "tokens": {
+            "mean": 39857.666666666664,
+            "median": 40643.0,
+            "stdev": 1434.4791156839242
+          },
+          "wall_s": {
+            "mean": 25.223587472333595,
+            "median": 25.44203604200038,
+            "stdev": 1.0972063921513528
+          }
+        },
+        "027_planner_transitive_dependencies": {
+          "attempts": 3,
+          "cost_usd": {
+            "mean": 0.039532333333333336,
+            "median": 0.040102,
+            "stdev": 0.0016834132984307041
+          },
+          "invalid_or_error": 0,
+          "solve_rate": 1.0,
+          "solve_rate_wilson_95": [
+            0.4385029682449546,
+            1.0
+          ],
+          "solved": 3,
+          "steps": {
+            "mean": 8.666666666666666,
+            "median": 9.0,
+            "stdev": 0.5773502691896257
+          },
+          "tokens": {
+            "mean": 35232.333333333336,
+            "median": 35994.0,
+            "stdev": 1480.558115486634
+          },
+          "wall_s": {
+            "mean": 20.201563180333476,
+            "median": 20.336861708000015,
+            "stdev": 0.9054041507542102
+          }
+        },
+        "028_planner_target_plan": {
+          "attempts": 3,
+          "cost_usd": {
+            "mean": 0.04205999999999999,
+            "median": 0.039922,
+            "stdev": 0.00372219343935804
+          },
+          "invalid_or_error": 0,
+          "solve_rate": 1.0,
+          "solve_rate_wilson_95": [
+            0.4385029682449546,
+            1.0
+          ],
+          "solved": 3,
+          "steps": {
+            "mean": 9.333333333333334,
+            "median": 9.0,
+            "stdev": 0.5773502691896257
+          },
+          "tokens": {
+            "mean": 37653.333333333336,
+            "median": 35598.0,
+            "stdev": 3592.90096347413
+          },
+          "wall_s": {
+            "mean": 20.80998151366657,
+            "median": 20.795945542000027,
+            "stdev": 0.8932920406154413
+          }
+        },
+        "029_planner_execution_layers": {
+          "attempts": 3,
+          "cost_usd": {
+            "mean": 0.03927666666666666,
+            "median": 0.040175999999999996,
+            "stdev": 0.0019145760192098228
+          },
+          "invalid_or_error": 0,
+          "solve_rate": 1.0,
+          "solve_rate_wilson_95": [
+            0.4385029682449546,
+            1.0
+          ],
+          "solved": 3,
+          "steps": {
+            "mean": 8.666666666666666,
+            "median": 9.0,
+            "stdev": 0.5773502691896257
+          },
+          "tokens": {
+            "mean": 34858.0,
+            "median": 35764.0,
+            "stdev": 1639.0082367090167
+          },
+          "wall_s": {
+            "mean": 19.94944129133334,
+            "median": 20.247181499999897,
+            "stdev": 0.8507077128266651
+          }
+        },
+        "030_planner_critical_path": {
+          "attempts": 3,
+          "cost_usd": {
+            "mean": 0.03721133333333333,
+            "median": 0.036669,
+            "stdev": 0.0023058404830632426
+          },
+          "invalid_or_error": 0,
+          "solve_rate": 1.0,
+          "solve_rate_wilson_95": [
+            0.4385029682449546,
+            1.0
+          ],
+          "solved": 3,
+          "steps": {
+            "mean": 8.666666666666666,
+            "median": 9.0,
+            "stdev": 0.5773502691896257
+          },
+          "tokens": {
+            "mean": 32239.333333333332,
+            "median": 32233.0,
+            "stdev": 2625.5057290612285
+          },
+          "wall_s": {
+            "mean": 21.730995430666706,
+            "median": 21.58463308299997,
+            "stdev": 0.8694163566578644
+          }
+        }
+      },
+      "overall": {
+        "attempts": 90,
+        "cost_usd": {
+          "mean": 0.037787133333333334,
+          "median": 0.0358565,
+          "stdev": 0.013105060702053022
+        },
+        "invalid_or_error": 0,
+        "solve_rate": 1.0,
+        "solve_rate_wilson_95": [
+          0.9590643744356734,
+          1.0
+        ],
+        "solved": 90,
+        "steps": {
+          "mean": 8.255555555555556,
+          "median": 8.0,
+          "stdev": 1.4654148556385296
+        },
+        "tokens": {
+          "mean": 33908.42222222222,
+          "median": 32147.5,
+          "stdev": 12537.983801124223
+        },
+        "wall_s": {
+          "mean": 19.319908787044444,
+          "median": 19.009352707999938,
+          "stdev": 3.6139082299761713
+        }
+      }
+    },
+    "retrieval": {
+      "by_difficulty": {
+        "basic": {
+          "attempts": 51,
+          "cost_usd": {
+            "mean": 0.15208205882352943,
+            "median": 0.14713,
+            "stdev": 0.032507567429392044
+          },
+          "invalid_or_error": 0,
+          "solve_rate": 1.0,
+          "solve_rate_wilson_95": [
+            0.9299533801014687,
+            1.0
+          ],
+          "solved": 51,
+          "steps": {
+            "mean": 5.705882352941177,
+            "median": 6.0,
+            "stdev": 0.701259371332999
+          },
+          "tokens": {
+            "mean": 28557.745098039217,
+            "median": 27526.0,
+            "stdev": 6228.439441282663
+          },
+          "wall_s": {
+            "mean": 19.021958159333405,
+            "median": 18.50290770799984,
+            "stdev": 4.317508775198829
+          }
+        },
+        "hard": {
+          "attempts": 9,
+          "cost_usd": {
+            "mean": 0.1374672222222222,
+            "median": 0.13593999999999998,
+            "stdev": 0.03873751509447198
+          },
+          "invalid_or_error": 0,
+          "solve_rate": 1.0,
+          "solve_rate_wilson_95": [
+            0.7008549515804559,
+            1.0
+          ],
+          "solved": 9,
+          "steps": {
+            "mean": 5.444444444444445,
+            "median": 5.0,
+            "stdev": 1.0137937550497031
+          },
+          "tokens": {
+            "mean": 25681.88888888889,
+            "median": 25708.0,
+            "stdev": 7287.637364819349
+          },
+          "wall_s": {
+            "mean": 17.852363851888793,
+            "median": 16.590671750000183,
+            "stdev": 3.111930330591535
+          }
+        },
+        "medium": {
+          "attempts": 30,
+          "cost_usd": {
+            "mean": 0.140757,
+            "median": 0.13956000000000002,
+            "stdev": 0.045258132982199814
+          },
+          "invalid_or_error": 0,
+          "solve_rate": 1.0,
+          "solve_rate_wilson_95": [
+            0.8864866068260312,
+            0.9999999999999999
+          ],
+          "solved": 30,
+          "steps": {
+            "mean": 5.8,
+            "median": 6.0,
+            "stdev": 1.2972118642263704
+          },
+          "tokens": {
+            "mean": 25983.266666666666,
+            "median": 25694.0,
+            "stdev": 8558.192001832507
+          },
+          "wall_s": {
+            "mean": 19.943424752766653,
+            "median": 19.62748652099981,
+            "stdev": 5.642352570599243
+          }
+        }
+      },
+      "by_fixture": {
+        "config_loader": {
+          "attempts": 27,
+          "cost_usd": {
+            "mean": 0.12266425925925926,
+            "median": 0.11853499999999999,
+            "stdev": 0.032318820984293575
+          },
+          "invalid_or_error": 0,
+          "solve_rate": 1.0,
+          "solve_rate_wilson_95": [
+            0.8754449702581328,
+            0.9999999999999998
+          ],
+          "solved": 27,
+          "steps": {
+            "mean": 5.62962962962963,
+            "median": 6.0,
+            "stdev": 1.0432253296000287
+          },
+          "tokens": {
+            "mean": 22674.62962962963,
+            "median": 21683.0,
+            "stdev": 6129.621390918969
+          },
+          "wall_s": {
+            "mean": 18.40116053092603,
+            "median": 17.799988834000033,
+            "stdev": 4.82062273201026
+          }
+        },
+        "dependency_planner": {
+          "attempts": 27,
+          "cost_usd": {
+            "mean": 0.15445407407407408,
+            "median": 0.155985,
+            "stdev": 0.04124560850836209
+          },
+          "invalid_or_error": 0,
+          "solve_rate": 1.0,
+          "solve_rate_wilson_95": [
+            0.8754449702581328,
+            0.9999999999999998
+          ],
+          "solved": 27,
+          "steps": {
+            "mean": 6.0,
+            "median": 6.0,
+            "stdev": 1.1766968108291043
+          },
+          "tokens": {
+            "mean": 28653.333333333332,
+            "median": 29240.0,
+            "stdev": 7770.157695657445
+          },
+          "wall_s": {
+            "mean": 20.56058241203694,
+            "median": 20.66680074999931,
+            "stdev": 4.640951981818361
+          }
+        },
+        "expression": {
+          "attempts": 36,
+          "cost_usd": {
+            "mean": 0.1592751388888889,
+            "median": 0.15704,
+            "stdev": 0.03081912403701199
+          },
+          "invalid_or_error": 0,
+          "solve_rate": 1.0,
+          "solve_rate_wilson_95": [
+            0.9035813714055363,
+            1.0
+          ],
+          "solved": 36,
+          "steps": {
+            "mean": 5.555555555555555,
+            "median": 6.0,
+            "stdev": 0.6522245206957689
+          },
+          "tokens": {
+            "mean": 30034.027777777777,
+            "median": 29190.0,
+            "stdev": 5860.323089514099
+          },
+          "wall_s": {
+            "mean": 18.809078442111172,
+            "median": 18.01044650049994,
+            "stdev": 4.568200898651874
+          }
+        }
+      },
+      "by_task": {
+        "001_mul_precedence": {
+          "attempts": 3,
+          "cost_usd": {
+            "mean": 0.19040500000000002,
+            "median": 0.19336,
+            "stdev": 0.017416537399839276
+          },
+          "invalid_or_error": 0,
+          "solve_rate": 1.0,
+          "solve_rate_wilson_95": [
+            0.4385029682449546,
+            1.0
+          ],
+          "solved": 3,
+          "steps": {
+            "mean": 6.333333333333333,
+            "median": 6.0,
+            "stdev": 0.5773502691896257
+          },
+          "tokens": {
+            "mean": 35426.333333333336,
+            "median": 35784.0,
+            "stdev": 3437.484012084032
+          },
+          "wall_s": {
+            "mean": 28.432742916666786,
+            "median": 27.097659832999852,
+            "stdev": 9.696437429924657
+          }
+        },
+        "002_eval_division_stub": {
+          "attempts": 3,
+          "cost_usd": {
+            "mean": 0.11562,
+            "median": 0.10102000000000001,
+            "stdev": 0.02565688260486841
+          },
+          "invalid_or_error": 0,
+          "solve_rate": 1.0,
+          "solve_rate_wilson_95": [
+            0.4385029682449546,
+            1.0
+          ],
+          "solved": 3,
+          "steps": {
+            "mean": 4.666666666666667,
+            "median": 4.0,
+            "stdev": 1.1547005383792515
+          },
+          "tokens": {
+            "mean": 21745.333333333332,
+            "median": 19080.0,
+            "stdev": 4631.222984626559
+          },
+          "wall_s": {
+            "mean": 15.790629361333382,
+            "median": 13.10194570900012,
+            "stdev": 4.764502510630537
+          }
+        },
+        "003_multidigit_number": {
+          "attempts": 3,
+          "cost_usd": {
+            "mean": 0.19988999999999998,
+            "median": 0.20226,
+            "stdev": 0.01465444557122513
+          },
+          "invalid_or_error": 0,
+          "solve_rate": 1.0,
+          "solve_rate_wilson_95": [
+            0.4385029682449546,
+            1.0
+          ],
+          "solved": 3,
+          "steps": {
+            "mean": 5.666666666666667,
+            "median": 6.0,
+            "stdev": 0.5773502691896257
+          },
+          "tokens": {
+            "mean": 37542.0,
+            "median": 37864.0,
+            "stdev": 2600.9919261697064
+          },
+          "wall_s": {
+            "mean": 20.939945389333086,
+            "median": 21.728027458999804,
+            "stdev": 2.381174226160437
+          }
+        },
+        "004_unary_minus": {
+          "attempts": 3,
+          "cost_usd": {
+            "mean": 0.162195,
+            "median": 0.15107500000000001,
+            "stdev": 0.0218649879945085
+          },
+          "invalid_or_error": 0,
+          "solve_rate": 1.0,
+          "solve_rate_wilson_95": [
+            0.4385029682449546,
+            1.0
+          ],
+          "solved": 3,
+          "steps": {
+            "mean": 5.333333333333333,
+            "median": 5.0,
+            "stdev": 0.5773502691896257
+          },
+          "tokens": {
+            "mean": 30696.333333333332,
+            "median": 28599.0,
+            "stdev": 4075.1698533108206
+          },
+          "wall_s": {
+            "mean": 17.043418236000132,
+            "median": 17.179854458000136,
+            "stdev": 1.5322700777474063
+          }
+        },
+        "005_eval_negation_stub": {
+          "attempts": 3,
+          "cost_usd": {
+            "mean": 0.14346499999999998,
+            "median": 0.14364,
+            "stdev": 0.00032499999999999624
+          },
+          "invalid_or_error": 0,
+          "solve_rate": 1.0,
+          "solve_rate_wilson_95": [
+            0.4385029682449546,
+            1.0
+          ],
+          "solved": 3,
+          "steps": {
+            "mean": 6.0,
+            "median": 6.0,
+            "stdev": 0.0
+          },
+          "tokens": {
+            "mean": 27053.0,
+            "median": 27060.0,
+            "stdev": 13.0
+          },
+          "wall_s": {
+            "mean": 16.635736957666722,
+            "median": 16.43073191600024,
+            "stdev": 1.0276658516014807
+          }
+        },
+        "006_eval_subtraction": {
+          "attempts": 3,
+          "cost_usd": {
+            "mean": 0.14762833333333333,
+            "median": 0.14218,
+            "stdev": 0.010115384734815245
+          },
+          "invalid_or_error": 0,
+          "solve_rate": 1.0,
+          "solve_rate_wilson_95": [
+            0.4385029682449546,
+            1.0
+          ],
+          "solved": 3,
+          "steps": {
+            "mean": 5.666666666666667,
+            "median": 6.0,
+            "stdev": 0.5773502691896257
+          },
+          "tokens": {
+            "mean": 27888.333333333332,
+            "median": 26760.0,
+            "stdev": 2118.34188301448
+          },
+          "wall_s": {
+            "mean": 17.924628875000053,
+            "median": 17.746848207999847,
+            "stdev": 1.8909871736039627
+          }
+        },
+        "007_eval_multiplication": {
+          "attempts": 3,
+          "cost_usd": {
+            "mean": 0.133005,
+            "median": 0.13072,
+            "stdev": 0.004184922340976003
+          },
+          "invalid_or_error": 0,
+          "solve_rate": 1.0,
+          "solve_rate_wilson_95": [
+            0.4385029682449546,
+            1.0
+          ],
+          "solved": 3,
+          "steps": {
+            "mean": 5.0,
+            "median": 5.0,
+            "stdev": 0.0
+          },
+          "tokens": {
+            "mean": 25051.666666666668,
+            "median": 24480.0,
+            "stdev": 1007.5258474765466
+          },
+          "wall_s": {
+            "mean": 16.297265999999883,
+            "median": 16.479234500000075,
+            "stdev": 2.4857594471570335
+          }
+        },
+        "008_tokenize_float": {
+          "attempts": 3,
+          "cost_usd": {
+            "mean": 0.1639683333333333,
+            "median": 0.16391499999999998,
+            "stdev": 0.0001858314648635525
+          },
+          "invalid_or_error": 0,
+          "solve_rate": 1.0,
+          "solve_rate_wilson_95": [
+            0.4385029682449546,
+            1.0
+          ],
+          "solved": 3,
+          "steps": {
+            "mean": 6.0,
+            "median": 6.0,
+            "stdev": 0.0
+          },
+          "tokens": {
+            "mean": 31357.666666666668,
+            "median": 31359.0,
+            "stdev": 6.110100926607787
+          },
+          "wall_s": {
+            "mean": 18.081722611333287,
+            "median": 18.60441183399962,
+            "stdev": 0.9760811561869503
+          }
+        },
+        "009_bare_dot": {
+          "attempts": 3,
+          "cost_usd": {
+            "mean": 0.16359166666666666,
+            "median": 0.15761,
+            "stdev": 0.011362126048118513
+          },
+          "invalid_or_error": 0,
+          "solve_rate": 1.0,
+          "solve_rate_wilson_95": [
+            0.4385029682449546,
+            1.0
+          ],
+          "solved": 3,
+          "steps": {
+            "mean": 5.333333333333333,
+            "median": 5.0,
+            "stdev": 0.5773502691896257
+          },
+          "tokens": {
+            "mean": 30509.0,
+            "median": 29286.0,
+            "stdev": 2286.5911309195617
+          },
+          "wall_s": {
+            "mean": 18.58464844433335,
+            "median": 16.20199437499923,
+            "stdev": 4.152591857086374
+          }
+        },
+        "010_tokenize_ops": {
+          "attempts": 3,
+          "cost_usd": {
+            "mean": 0.18831,
+            "median": 0.17418999999999998,
+            "stdev": 0.06410706435331447
+          },
+          "invalid_or_error": 0,
+          "solve_rate": 1.0,
+          "solve_rate_wilson_95": [
+            0.4385029682449546,
+            1.0
+          ],
+          "solved": 3,
+          "steps": {
+            "mean": 5.666666666666667,
+            "median": 6.0,
+            "stdev": 0.5773502691896257
+          },
+          "tokens": {
+            "mean": 35768.666666666664,
+            "median": 32974.0,
+            "stdev": 12659.506204166628
+          },
+          "wall_s": {
+            "mean": 18.65485680533372,
+            "median": 18.359976250000727,
+            "stdev": 1.3944231112059184
+          }
+        },
+        "011_parser_trailing": {
+          "attempts": 3,
+          "cost_usd": {
+            "mean": 0.16657666666666668,
+            "median": 0.166585,
+            "stdev": 0.00011273124382057328
+          },
+          "invalid_or_error": 0,
+          "solve_rate": 1.0,
+          "solve_rate_wilson_95": [
+            0.4385029682449546,
+            1.0
+          ],
+          "solved": 3,
+          "steps": {
+            "mean": 6.0,
+            "median": 6.0,
+            "stdev": 0.0
+          },
+          "tokens": {
+            "mean": 31580.666666666668,
+            "median": 31581.0,
+            "stdev": 4.509249752822894
+          },
+          "wall_s": {
+            "mean": 20.170422027666973,
+            "median": 18.598339041000145,
+            "stdev": 4.039858335141973
+          }
+        },
+        "012_eval_addition": {
+          "attempts": 3,
+          "cost_usd": {
+            "mean": 0.13664666666666667,
+            "median": 0.13402,
+            "stdev": 0.0046931394964707055
+          },
+          "invalid_or_error": 0,
+          "solve_rate": 1.0,
+          "solve_rate_wilson_95": [
+            0.4385029682449546,
+            1.0
+          ],
+          "solved": 3,
+          "steps": {
+            "mean": 5.0,
+            "median": 5.0,
+            "stdev": 0.0
+          },
+          "tokens": {
+            "mean": 25789.333333333332,
+            "median": 25264.0,
+            "stdev": 1056.0257256967432
+          },
+          "wall_s": {
+            "mean": 17.152923680666692,
+            "median": 17.756257084000026,
+            "stdev": 1.894426254615121
+          }
+        },
+        "013_config_nested_merge": {
+          "attempts": 3,
+          "cost_usd": {
+            "mean": 0.10800333333333334,
+            "median": 0.100155,
+            "stdev": 0.018231814455323247
+          },
+          "invalid_or_error": 0,
+          "solve_rate": 1.0,
+          "solve_rate_wilson_95": [
+            0.4385029682449546,
+            1.0
+          ],
+          "solved": 3,
+          "steps": {
+            "mean": 5.333333333333333,
+            "median": 5.0,
+            "stdev": 0.5773502691896257
+          },
+          "tokens": {
+            "mean": 19866.0,
+            "median": 18303.0,
+            "stdev": 3523.845768475119
+          },
+          "wall_s": {
+            "mean": 17.505345611333116,
+            "median": 16.015713458999926,
+            "stdev": 4.362021829233418
+          }
+        },
+        "014_config_input_mutation": {
+          "attempts": 3,
+          "cost_usd": {
+            "mean": 0.07321499999999999,
+            "median": 0.07297999999999999,
+            "stdev": 0.000726584475474123
+          },
+          "invalid_or_error": 0,
+          "solve_rate": 1.0,
+          "solve_rate_wilson_95": [
+            0.4385029682449546,
+            1.0
+          ],
+          "solved": 3,
+          "steps": {
+            "mean": 4.0,
+            "median": 4.0,
+            "stdev": 0.0
+          },
+          "tokens": {
+            "mean": 13349.666666666666,
+            "median": 13352.0,
+            "stdev": 45.54484969053398
+          },
+          "wall_s": {
+            "mean": 11.941362680666922,
+            "median": 11.646893916999943,
+            "stdev": 0.9638624106811495
+          }
+        },
+        "015_config_list_policy": {
+          "attempts": 3,
+          "cost_usd": {
+            "mean": 0.117075,
+            "median": 0.11853499999999999,
+            "stdev": 0.002659755627872597
+          },
+          "invalid_or_error": 0,
+          "solve_rate": 1.0,
+          "solve_rate_wilson_95": [
+            0.4385029682449546,
+            1.0
+          ],
+          "solved": 3,
+          "steps": {
+            "mean": 6.0,
+            "median": 6.0,
+            "stdev": 0.0
+          },
+          "tokens": {
+            "mean": 21543.0,
+            "median": 21683.0,
+            "stdev": 247.70143318115865
+          },
+          "wall_s": {
+            "mean": 19.719878305666498,
+            "median": 18.611081791999823,
+            "stdev": 2.6540859151399463
+          }
+        },
+        "016_config_missing_env": {
+          "attempts": 3,
+          "cost_usd": {
+            "mean": 0.13229333333333335,
+            "median": 0.14712999999999998,
+            "stdev": 0.02569786048163024
+          },
+          "invalid_or_error": 0,
+          "solve_rate": 1.0,
+          "solve_rate_wilson_95": [
+            0.4385029682449546,
+            1.0
+          ],
+          "solved": 3,
+          "steps": {
+            "mean": 6.333333333333333,
+            "median": 7.0,
+            "stdev": 1.1547005383792515
+          },
+          "tokens": {
+            "mean": 24700.0,
+            "median": 27526.0,
+            "stdev": 4894.775582189647
+          },
+          "wall_s": {
+            "mean": 17.674207305333464,
+            "median": 18.917557458000374,
+            "stdev": 4.638348288297283
+          }
+        },
+        "017_config_env_default": {
+          "attempts": 3,
+          "cost_usd": {
+            "mean": 0.10170833333333333,
+            "median": 0.10190999999999999,
+            "stdev": 0.010363971648616828
+          },
+          "invalid_or_error": 0,
+          "solve_rate": 1.0,
+          "solve_rate_wilson_95": [
+            0.4385029682449546,
+            1.0
+          ],
+          "solved": 3,
+          "steps": {
+            "mean": 5.333333333333333,
+            "median": 5.0,
+            "stdev": 0.5773502691896257
+          },
+          "tokens": {
+            "mean": 18879.0,
+            "median": 18914.0,
+            "stdev": 1996.7300769007313
+          },
+          "wall_s": {
+            "mean": 16.09926470900003,
+            "median": 17.277707709000424,
+            "stdev": 2.422567509233092
+          }
+        },
+        "018_config_recursive_interpolation": {
+          "attempts": 3,
+          "cost_usd": {
+            "mean": 0.118905,
+            "median": 0.11647,
+            "stdev": 0.005153680723521786
+          },
+          "invalid_or_error": 0,
+          "solve_rate": 1.0,
+          "solve_rate_wilson_95": [
+            0.4385029682449546,
+            1.0
+          ],
+          "solved": 3,
+          "steps": {
+            "mean": 5.333333333333333,
+            "median": 5.0,
+            "stdev": 0.5773502691896257
+          },
+          "tokens": {
+            "mean": 21899.666666666668,
+            "median": 21394.0,
+            "stdev": 912.4551130512302
+          },
+          "wall_s": {
+            "mean": 19.58911480533364,
+            "median": 19.371735833000457,
+            "stdev": 3.482499136767023
+          }
+        },
+        "019_config_relative_include": {
+          "attempts": 3,
+          "cost_usd": {
+            "mean": 0.14848833333333333,
+            "median": 0.15019,
+            "stdev": 0.007596809088909193
+          },
+          "invalid_or_error": 0,
+          "solve_rate": 1.0,
+          "solve_rate_wilson_95": [
+            0.4385029682449546,
+            1.0
+          ],
+          "solved": 3,
+          "steps": {
+            "mean": 6.0,
+            "median": 6.0,
+            "stdev": 0.0
+          },
+          "tokens": {
+            "mean": 27495.0,
+            "median": 27754.0,
+            "stdev": 1370.9730121340829
+          },
+          "wall_s": {
+            "mean": 19.1240248193335,
+            "median": 17.764723250000316,
+            "stdev": 2.975642519404835
+          }
+        },
+        "020_config_include_cycle": {
+          "attempts": 3,
+          "cost_usd": {
+            "mean": 0.12907333333333335,
+            "median": 0.138935,
+            "stdev": 0.03560690113353495
+          },
+          "invalid_or_error": 0,
+          "solve_rate": 1.0,
+          "solve_rate_wilson_95": [
+            0.4385029682449546,
+            1.0
+          ],
+          "solved": 3,
+          "steps": {
+            "mean": 5.0,
+            "median": 5.0,
+            "stdev": 1.0
+          },
+          "tokens": {
+            "mean": 23610.666666666668,
+            "median": 25375.0,
+            "stdev": 6779.917723197925
+          },
+          "wall_s": {
+            "mean": 18.907468236333745,
+            "median": 19.866571333000138,
+            "stdev": 5.337853067361923
+          }
+        },
+        "021_config_include_precedence": {
+          "attempts": 3,
+          "cost_usd": {
+            "mean": 0.17521666666666666,
+            "median": 0.15645,
+            "stdev": 0.03252647319236029
+          },
+          "invalid_or_error": 0,
+          "solve_rate": 1.0,
+          "solve_rate_wilson_95": [
+            0.4385029682449546,
+            1.0
+          ],
+          "solved": 3,
+          "steps": {
+            "mean": 7.333333333333333,
+            "median": 7.0,
+            "stdev": 0.5773502691896257
+          },
+          "tokens": {
+            "mean": 32728.666666666668,
+            "median": 29138.0,
+            "stdev": 6220.083145210628
+          },
+          "wall_s": {
+            "mean": 25.049778305333348,
+            "median": 22.068704250000337,
+            "stdev": 7.314568587869505
+          }
+        },
+        "022_planner_duplicate_ids": {
+          "attempts": 3,
+          "cost_usd": {
+            "mean": 0.14365833333333333,
+            "median": 0.13368,
+            "stdev": 0.01983398871466185
+          },
+          "invalid_or_error": 0,
+          "solve_rate": 1.0,
+          "solve_rate_wilson_95": [
+            0.4385029682449546,
+            1.0
+          ],
+          "solved": 3,
+          "steps": {
+            "mean": 6.0,
+            "median": 6.0,
+            "stdev": 0.0
+          },
+          "tokens": {
+            "mean": 26591.666666666668,
+            "median": 24584.0,
+            "stdev": 3897.7783843278385
+          },
+          "wall_s": {
+            "mean": 22.3764237080001,
+            "median": 22.923026540999672,
+            "stdev": 3.560408208491393
+          }
+        },
+        "023_planner_negative_duration": {
+          "attempts": 3,
+          "cost_usd": {
+            "mean": 0.17935833333333337,
+            "median": 0.18393500000000002,
+            "stdev": 0.015582500066848469
+          },
+          "invalid_or_error": 0,
+          "solve_rate": 1.0,
+          "solve_rate_wilson_95": [
+            0.4385029682449546,
+            1.0
+          ],
+          "solved": 3,
+          "steps": {
+            "mean": 6.666666666666667,
+            "median": 7.0,
+            "stdev": 0.5773502691896257
+          },
+          "tokens": {
+            "mean": 33359.666666666664,
+            "median": 34415.0,
+            "stdev": 3059.6889275436697
+          },
+          "wall_s": {
+            "mean": 21.794573375333737,
+            "median": 20.874622084000293,
+            "stdev": 2.868145606024185
+          }
+        },
+        "024_planner_missing_dependency": {
+          "attempts": 3,
+          "cost_usd": {
+            "mean": 0.15269333333333335,
+            "median": 0.15866,
+            "stdev": 0.013720238093172188
+          },
+          "invalid_or_error": 0,
+          "solve_rate": 1.0,
+          "solve_rate_wilson_95": [
+            0.4385029682449546,
+            1.0
+          ],
+          "solved": 3,
+          "steps": {
+            "mean": 6.666666666666667,
+            "median": 7.0,
+            "stdev": 0.5773502691896257
+          },
+          "tokens": {
+            "mean": 27841.333333333332,
+            "median": 29240.0,
+            "stdev": 2611.8570660228197
+          },
+          "wall_s": {
+            "mean": 24.600840152666326,
+            "median": 24.05088599999999,
+            "stdev": 4.235877346904807
+          }
+        },
+        "025_planner_deterministic_order": {
+          "attempts": 3,
+          "cost_usd": {
+            "mean": 0.14240833333333333,
+            "median": 0.114735,
+            "stdev": 0.0804858823541951
+          },
+          "invalid_or_error": 0,
+          "solve_rate": 1.0,
+          "solve_rate_wilson_95": [
+            0.4385029682449546,
+            1.0
+          ],
+          "solved": 3,
+          "steps": {
+            "mean": 5.666666666666667,
+            "median": 5.0,
+            "stdev": 2.0816659994661326
+          },
+          "tokens": {
+            "mean": 26277.666666666668,
+            "median": 20687.0,
+            "stdev": 15312.589406541707
+          },
+          "wall_s": {
+            "mean": 19.831786860999575,
+            "median": 17.03103849999934,
+            "stdev": 7.748116583307825
+          }
+        },
+        "026_planner_cycle_detection": {
+          "attempts": 3,
+          "cost_usd": {
+            "mean": 0.19864833333333332,
+            "median": 0.19154,
+            "stdev": 0.014698709410466394
+          },
+          "invalid_or_error": 0,
+          "solve_rate": 1.0,
+          "solve_rate_wilson_95": [
+            0.4385029682449546,
+            1.0
+          ],
+          "solved": 3,
+          "steps": {
+            "mean": 7.0,
+            "median": 7.0,
+            "stdev": 0.0
+          },
+          "tokens": {
+            "mean": 37092.333333333336,
+            "median": 35556.0,
+            "stdev": 2936.246980983264
+          },
+          "wall_s": {
+            "mean": 23.58038620866652,
+            "median": 24.524408209000285,
+            "stdev": 3.642826755365348
+          }
+        },
+        "027_planner_transitive_dependencies": {
+          "attempts": 3,
+          "cost_usd": {
+            "mean": 0.16091833333333336,
+            "median": 0.14457,
+            "stdev": 0.05455660966677946
+          },
+          "invalid_or_error": 0,
+          "solve_rate": 1.0,
+          "solve_rate_wilson_95": [
+            0.4385029682449546,
+            1.0
+          ],
+          "solved": 3,
+          "steps": {
+            "mean": 5.666666666666667,
+            "median": 5.0,
+            "stdev": 2.0816659994661326
+          },
+          "tokens": {
+            "mean": 29671.666666666668,
+            "median": 26722.0,
+            "stdev": 10039.909876753543
+          },
+          "wall_s": {
+            "mean": 19.304139846999835,
+            "median": 16.91061095799978,
+            "stdev": 6.8956674545226555
+          }
+        },
+        "028_planner_target_plan": {
+          "attempts": 3,
+          "cost_usd": {
+            "mean": 0.153905,
+            "median": 0.141675,
+            "stdev": 0.047759235494299945
+          },
+          "invalid_or_error": 0,
+          "solve_rate": 1.0,
+          "solve_rate_wilson_95": [
+            0.4385029682449546,
+            1.0
+          ],
+          "solved": 3,
+          "steps": {
+            "mean": 5.333333333333333,
+            "median": 5.0,
+            "stdev": 1.5275252316519465
+          },
+          "tokens": {
+            "mean": 28605.0,
+            "median": 26327.0,
+            "stdev": 8965.739177558089
+          },
+          "wall_s": {
+            "mean": 19.581489305666462,
+            "median": 21.074593499999537,
+            "stdev": 3.74459561210165
+          }
+        },
+        "029_planner_execution_layers": {
+          "attempts": 3,
+          "cost_usd": {
+            "mean": 0.15839666666666666,
+            "median": 0.155985,
+            "stdev": 0.02375449448700884
+          },
+          "invalid_or_error": 0,
+          "solve_rate": 1.0,
+          "solve_rate_wilson_95": [
+            0.4385029682449546,
+            1.0
+          ],
+          "solved": 3,
+          "steps": {
+            "mean": 6.0,
+            "median": 6.0,
+            "stdev": 1.0
+          },
+          "tokens": {
+            "mean": 29820.666666666668,
+            "median": 29417.0,
+            "stdev": 4328.639547633105
+          },
+          "wall_s": {
+            "mean": 18.6631002919997,
+            "median": 17.939465249999557,
+            "stdev": 2.8267632609052717
+          }
+        },
+        "030_planner_critical_path": {
+          "attempts": 3,
+          "cost_usd": {
+            "mean": 0.10010000000000001,
+            "median": 0.0999,
+            "stdev": 0.0005766281297335286
+          },
+          "invalid_or_error": 0,
+          "solve_rate": 1.0,
+          "solve_rate_wilson_95": [
+            0.4385029682449546,
+            1.0
+          ],
+          "solved": 3,
+          "steps": {
+            "mean": 5.0,
+            "median": 5.0,
+            "stdev": 0.0
+          },
+          "tokens": {
+            "mean": 18620.0,
+            "median": 18612.0,
+            "stdev": 23.065125189341593
+          },
+          "wall_s": {
+            "mean": 15.312501958000212,
+            "median": 15.26626266600033,
+            "stdev": 1.2556888241392394
+          }
+        }
+      },
+      "overall": {
+        "attempts": 90,
+        "cost_usd": {
+          "mean": 0.14684555555555556,
+          "median": 0.1441175,
+          "stdev": 0.03785612619031863
+        },
+        "invalid_or_error": 0,
+        "solve_rate": 1.0,
+        "solve_rate_wilson_95": [
+          0.9590643744356734,
+          1.0
+        ],
+        "solved": 90,
+        "steps": {
+          "mean": 5.711111111111111,
+          "median": 6.0,
+          "stdev": 0.9627260504368638
+        },
+        "tokens": {
+          "mean": 27412.0,
+          "median": 27060.5,
+          "stdev": 7223.3347460804125
+        },
+        "wall_s": {
+          "mean": 19.21215425973336,
+          "median": 18.53861527050003,
+          "stdev": 4.701534515977869
+        }
+      }
+    }
+  }
+}

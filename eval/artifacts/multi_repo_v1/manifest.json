@@ -1,0 +1,53 @@
+{
+  "attempts_per_task": 3,
+  "campaign": "multi_repo_v1",
+  "command": [
+    "python",
+    "cli.py",
+    "experiment",
+    "--campaign",
+    "multi_repo_v1",
+    "--attempts",
+    "3",
+    "--variants",
+    "baseline,haiku,retrieval",
+    "--cost-cap",
+    "40",
+    "--publish"
+  ],
+  "config": {
+    "cost_budget_usd": 0.5,
+    "enable_retrieval": false,
+    "judge_timeout_s": 60,
+    "max_read_lines": 400,
+    "max_retries": 2,
+    "max_search_hits": 100,
+    "max_steps": 30,
+    "max_test_output": 4000,
+    "max_tokens": 8192,
+    "max_tool_result_chars": 8000,
+    "model": "anthropic/claude-opus-4.8",
+    "model_haiku": "anthropic/claude-haiku-4.5",
+    "run_tests_timeout_s": 60,
+    "self_correction": false,
+    "stream": true,
+    "timeout_s": 120.0
+  },
+  "cost_cap_usd": 40.0,
+  "dirty_tree": false,
+  "finished_at": "2026-07-27T19:06:12+08:00",
+  "n_tasks": 30,
+  "platform": "macOS-26.5.2-arm64-arm-64bit",
+  "pytest": "8.4.2",
+  "python": "3.9.6",
+  "repo_commit": "acdbc5e",
+  "schema_version": 1,
+  "started_at": "2026-07-27T17:35:55+08:00",
+  "status": "complete",
+  "task_digest_sha256": "c834ce4ed0fbfd799da203df3e0afcf0cb8014736b6c563edae1fc37277cb8c2",
+  "variants": [
+    "baseline",
+    "haiku",
+    "retrieval"
+  ]
+}
