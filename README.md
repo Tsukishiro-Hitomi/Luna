@@ -119,7 +119,7 @@ independently re-running pytest against the pristine tests — the model never g
   previously-green test newly fails (regression check). The model is never
   trusted to grade itself.
 
-## Run on a real repo (v2)
+## Run on a real repo 
 
 `python cli.py run <repo>` points the same agent at **any git repo that has failing
 tests** and fixes them to green — the fixture task set, generalized to real code:
@@ -141,7 +141,7 @@ python cli.py run ~/proj --target tests/test_x.py::test_y     # narrow the goal
 python cli.py run ~/proj --test-cmd "make test" --budget 2.0 --max-steps 60
 ```
 
-### Chat UI —— 卢娜
+### Chat UI —— Luna
 
 A chat frontend over the same runner — paste a repo path, she fixes the red tests
 and replies with a result card (baseline → fixed/regressions → branch → cost → diff):
