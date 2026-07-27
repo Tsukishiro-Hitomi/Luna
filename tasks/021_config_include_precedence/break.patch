@@ -1,0 +1,12 @@
+diff --git a/loader.py b/loader.py
+--- a/loader.py
++++ b/loader.py
+@@ -35,7 +35,7 @@ def _load(path, env, stack):
+     for include in includes:
+         include_path = os.path.join(os.path.dirname(path), include)
+         merged = deep_merge(merged, _load(include_path, env, next_stack))
+-    merged = deep_merge(merged, data)
++    merged = deep_merge(data, merged)
+     return interpolate(merged, env)
+ 
+ 

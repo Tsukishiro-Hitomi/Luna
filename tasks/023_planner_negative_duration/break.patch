@@ -1,0 +1,13 @@
+diff --git a/parser.py b/parser.py
+--- a/parser.py
++++ b/parser.py
+@@ -20,8 +20,7 @@ def parse_tasks(items):
+         if not isinstance(dependencies, list) or not all(isinstance(dep, str) for dep in dependencies):
+             raise PlannerError(f"dependencies for {task_id} must be a list of strings")
+         duration = item.get("duration", 1.0)
+-        if not isinstance(duration, (int, float)) or isinstance(duration, bool) or duration < 0:
+-            raise PlannerError(f"duration for {task_id} must be a non-negative number")
++        duration = float(duration)
+         parsed.append(TaskSpec(task_id, tuple(dependencies), float(duration)))
+         seen.add(task_id)
+     return parsed

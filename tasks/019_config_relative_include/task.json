@@ -1,0 +1,11 @@
+{
+  "id": "019_config_relative_include",
+  "title": "Resolve included files relative to their parent configuration",
+  "kind": "fix_bug",
+  "description": "Some configuration-loader tests are failing. Find the defect and make the full suite pass without editing tests.",
+  "target_tests": ["tests/test_loader.py::test_include_is_resolved_relative_to_parent", "tests/test_loader.py::test_nested_includes_work_across_directories"],
+  "fixture": "config_loader",
+  "difficulty": "medium",
+  "tags": ["filesystem", "cross-file", "boundary"],
+  "source": {"type": "synthetic", "notes": "authored for Luna"}
+}

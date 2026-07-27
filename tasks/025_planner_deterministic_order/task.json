@@ -1,0 +1,11 @@
+{
+  "id": "025_planner_deterministic_order",
+  "title": "Use stable lexical ordering for independent ready tasks",
+  "kind": "fix_bug",
+  "description": "Some dependency-planner tests are failing. Find the defect and make the full suite pass without editing tests.",
+  "target_tests": ["tests/test_planner.py::test_topological_order_is_deterministic_for_independent_tasks"],
+  "fixture": "dependency_planner",
+  "difficulty": "medium",
+  "tags": ["determinism", "graph"],
+  "source": {"type": "synthetic", "notes": "authored for Luna"}
+}

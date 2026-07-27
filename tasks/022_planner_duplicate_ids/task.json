@@ -1,0 +1,11 @@
+{
+  "id": "022_planner_duplicate_ids",
+  "title": "Reject duplicate task identifiers during parsing",
+  "kind": "fix_bug",
+  "description": "Some dependency-planner tests are failing. Find the defect and make the full suite pass without editing tests.",
+  "target_tests": ["tests/test_parser.py::test_duplicate_ids_raise"],
+  "fixture": "dependency_planner",
+  "difficulty": "basic",
+  "tags": ["validation", "boundary"],
+  "source": {"type": "synthetic", "notes": "authored for Luna"}
+}

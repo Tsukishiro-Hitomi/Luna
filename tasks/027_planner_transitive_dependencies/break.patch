@@ -1,0 +1,21 @@
+diff --git a/planner.py b/planner.py
+--- a/planner.py
++++ b/planner.py
+@@ -49,16 +49,7 @@ def transitive_dependencies(tasks, target):
+     known = _validate_dependencies(tasks)
+     if target not in known:
+         raise PlannerError(f"unknown target: {target}")
+-    found = set()
+-
+-    def visit(task_id):
+-        for dependency in known[task_id].dependencies:
+-            if dependency not in found:
+-                found.add(dependency)
+-                visit(dependency)
+-
+-    visit(target)
+-    return sorted(found)
++    return sorted(set(known[target].dependencies))
+ 
+ 
+ def plan_for(tasks, targets):

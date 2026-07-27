@@ -1,0 +1,11 @@
+{
+  "id": "016_config_missing_env",
+  "title": "Raise a useful error for an unresolved environment variable",
+  "kind": "fix_bug",
+  "description": "Some configuration-loader tests are failing. Find the defect and make the full suite pass without editing tests.",
+  "target_tests": ["tests/test_interpolate.py::test_missing_variable_raises"],
+  "fixture": "config_loader",
+  "difficulty": "basic",
+  "tags": ["error-handling", "boundary"],
+  "source": {"type": "synthetic", "notes": "authored for Luna"}
+}

@@ -1,0 +1,11 @@
+{
+  "id": "020_config_include_cycle",
+  "title": "Detect cyclic configuration includes",
+  "kind": "implement_stub",
+  "description": "Some configuration-loader tests are failing. Find the defect and make the full suite pass without editing tests.",
+  "target_tests": ["tests/test_loader.py::test_include_cycle_raises_useful_error"],
+  "fixture": "config_loader",
+  "difficulty": "medium",
+  "tags": ["cycle-detection", "cross-file", "error-handling"],
+  "source": {"type": "synthetic", "notes": "authored for Luna"}
+}

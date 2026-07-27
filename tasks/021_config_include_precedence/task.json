@@ -1,0 +1,11 @@
+{
+  "id": "021_config_include_precedence",
+  "title": "Let child configuration values override included defaults",
+  "kind": "fix_bug",
+  "description": "Some configuration-loader tests are failing. Find the defect and make the full suite pass without editing tests.",
+  "target_tests": ["tests/test_loader.py::test_child_values_override_included_values"],
+  "fixture": "config_loader",
+  "difficulty": "medium",
+  "tags": ["precedence", "cross-file", "regression-prone"],
+  "source": {"type": "synthetic", "notes": "authored for Luna"}
+}

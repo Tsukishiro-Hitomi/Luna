@@ -1,0 +1,11 @@
+{
+  "id": "024_planner_missing_dependency",
+  "title": "Report dependencies that reference unknown tasks",
+  "kind": "implement_stub",
+  "description": "Some dependency-planner tests are failing. Find the defect and make the full suite pass without editing tests.",
+  "target_tests": ["tests/test_planner.py::test_missing_dependency_raises"],
+  "fixture": "dependency_planner",
+  "difficulty": "medium",
+  "tags": ["validation", "cross-file", "error-handling"],
+  "source": {"type": "synthetic", "notes": "authored for Luna"}
+}

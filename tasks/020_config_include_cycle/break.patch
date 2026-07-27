@@ -1,0 +1,14 @@
+diff --git a/loader.py b/loader.py
+--- a/loader.py
++++ b/loader.py
+@@ -19,9 +19,7 @@ def _read_json(path):
+ 
+ def _load(path, env, stack):
+     path = os.path.realpath(path)
+-    if path in stack:
+-        chain = " -> ".join(stack + [path])
+-        raise IncludeCycleError(f"include cycle: {chain}")
++    # TODO: detect include cycles
+ 
+     data = _read_json(path)
+     includes = data.pop("include", [])

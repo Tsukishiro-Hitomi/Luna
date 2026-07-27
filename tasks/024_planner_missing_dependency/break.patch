@@ -1,0 +1,15 @@
+diff --git a/planner.py b/planner.py
+--- a/planner.py
++++ b/planner.py
+@@ -11,10 +11,7 @@ def _validate_dependencies(tasks):
+     known = _by_id(tasks)
+     for task in tasks:
+         for dependency in task.dependencies:
+-            if dependency not in known:
+-                raise MissingDependencyError(
+-                    f"task {task.id} depends on missing task {dependency}"
+-                )
++            pass  # TODO: validate missing dependencies
+     return known
+ 
+ 

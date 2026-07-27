@@ -1,0 +1,11 @@
+{
+  "id": "017_config_env_default",
+  "title": "Honor interpolation defaults when environment values are absent",
+  "kind": "fix_bug",
+  "description": "Some configuration-loader tests are failing. Find the defect and make the full suite pass without editing tests.",
+  "target_tests": ["tests/test_interpolate.py::test_default_is_used_when_missing"],
+  "fixture": "config_loader",
+  "difficulty": "basic",
+  "tags": ["string-processing", "boundary"],
+  "source": {"type": "synthetic", "notes": "authored for Luna"}
+}

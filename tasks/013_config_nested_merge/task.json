@@ -1,0 +1,11 @@
+{
+  "id": "013_config_nested_merge",
+  "title": "Preserve sibling keys during recursive configuration merge",
+  "kind": "fix_bug",
+  "description": "Some configuration-loader tests are failing. Find the defect and make the full suite pass without editing tests.",
+  "target_tests": ["tests/test_merge.py::test_nested_merge_preserves_sibling", "tests/test_merge.py::test_new_nested_key_is_added"],
+  "fixture": "config_loader",
+  "difficulty": "medium",
+  "tags": ["nested-data", "regression-prone"],
+  "source": {"type": "synthetic", "notes": "authored for Luna"}
+}

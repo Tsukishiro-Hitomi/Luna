@@ -1,0 +1,12 @@
+diff --git a/interpolate.py b/interpolate.py
+--- a/interpolate.py
++++ b/interpolate.py
+@@ -23,7 +23,7 @@ def interpolate(value, env):
+     if isinstance(value, str):
+         return _expand_string(value, env)
+     if isinstance(value, list):
+-        return [interpolate(item, env) for item in value]
++        return value
+     if isinstance(value, dict):
+         return {key: interpolate(item, env) for key, item in value.items()}
+     return value

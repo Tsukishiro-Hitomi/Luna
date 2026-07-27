@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "case_id": "itsdangerous_237",
+  "classification": "single real-repository case study; not included in benchmark pass@1",
+  "upstream": {
+    "name": "pallets/itsdangerous",
+    "url": "https://github.com/pallets/itsdangerous",
+    "license": "BSD-3-Clause",
+    "license_url": "https://github.com/pallets/itsdangerous/blob/15a2e0d9b4bdaa38144c947a9aa04ffd49826700/LICENSE.rst",
+    "issue_url": "https://github.com/pallets/itsdangerous/issues/237",
+    "base_commit": "15a2e0d9b4bdaa38144c947a9aa04ffd49826700",
+    "upstream_fix_commit": "41ec419632aae3533ff12838044eeddd9cd1311f"
+  },
+  "reproduction": {
+    "patch": "reproduction.patch",
+    "test_command": "python -m pytest -q",
+    "baseline": {"passed": 421, "failed": 16, "error": 0, "skipped": 0},
+    "failure": "Signer and Serializer accept salt=None at construction but fail during signing with TypeError"
+  },
+  "luna_run": {
+    "date": "2026-07-27",
+    "model": "anthropic/claude-opus-4.8",
+    "status": "solved",
+    "target_tests": 16,
+    "fixed": 16,
+    "regressions": 0,
+    "steps": 12,
+    "input_tokens": 73590,
+    "output_tokens": 2031,
+    "estimated_cost_usd": 0.4187,
+    "wall_s": 45.9,
+    "stop_reason": "model_stop",
+    "patch": "luna.patch",
+    "post_verdict": {"passed": 437, "failed": 0, "error": 0, "skipped": 0}
+  }
+}

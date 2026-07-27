@@ -1,0 +1,11 @@
+{
+  "id": "029_planner_execution_layers",
+  "title": "Group simultaneously ready tasks into the same execution layer",
+  "kind": "fix_bug",
+  "description": "Some dependency-planner tests are failing. Find the defect and make the full suite pass without editing tests.",
+  "target_tests": ["tests/test_planner.py::test_execution_layers_group_parallel_work", "tests/test_planner.py::test_execution_layers_put_independent_tasks_together"],
+  "fixture": "dependency_planner",
+  "difficulty": "hard",
+  "tags": ["graph", "parallelism", "regression-prone"],
+  "source": {"type": "synthetic", "notes": "authored for Luna"}
+}

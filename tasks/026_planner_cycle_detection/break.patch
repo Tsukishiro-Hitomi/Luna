@@ -1,0 +1,13 @@
+diff --git a/planner.py b/planner.py
+--- a/planner.py
++++ b/planner.py
+@@ -38,9 +38,6 @@ def topological_order(tasks):
+             indegree[child] -= 1
+             if indegree[child] == 0:
+                 bisect.insort(ready, child)
+-    if len(order) != len(tasks):
+-        blocked = sorted(task_id for task_id, degree in indegree.items() if degree > 0)
+-        raise CycleError(f"dependency cycle involving: {', '.join(blocked)}")
+     return order
+ 
+ 

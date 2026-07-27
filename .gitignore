@@ -23,6 +23,7 @@ eval/results/
 .DS_Store
 
 # plan
+plan.md
 ROADMAP.md
 DESIGN.md
 V2_PLAN.md

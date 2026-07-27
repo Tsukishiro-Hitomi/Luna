@@ -30,7 +30,8 @@ from agent import profile
 from agent.config import Config
 from agent.sandbox import task_sandbox
 from agent.loop import run_agent
-from eval.run_bench import discover_tasks, run_bench, render_scorecard
+from eval.experiment import run_experiment
+from eval.run_bench import discover_tasks, run_bench, render_scorecard, validate_task_dataset
 from eval.run_repo import run_repo
 
 
@@ -50,7 +51,9 @@ def build_parser() -> argparse.ArgumentParser:
         prog="cli.py",
         description="Luna — a test-driven autonomous coding agent.",
     )
-    sub = parser.add_subparsers(dest="command", required=True, metavar="{solve,bench}")
+    sub = parser.add_subparsers(
+        dest="command", required=True, metavar="{solve,bench,experiment,validate,run}"
+    )
 
     # —— solve ——（入参是任务目录名/id，与 discover_tasks 一致）
     p_solve = sub.add_parser(
@@ -115,6 +118,46 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Enable embedding retrieval (V8): prepend relevant code to the first message.",
     )
+    p_validate = sub.add_parser(
+        "validate",
+        help="Validate every fixture and break patch offline; never calls the model.",
+    )
+    p_validate.add_argument(
+        "--tasks", default=DEFAULT_TASKS_DIR, metavar="DIR",
+        help="Task-set root (default: %(default)s).",
+    )
+    p_validate.add_argument(
+        "--timeout", type=int, default=60, metavar="SEC",
+        help="Per-pytest timeout during validation (default: %(default)s).",
+    )
+    p_experiment = sub.add_parser(
+        "experiment",
+        help="Run or resume an auditable repeated benchmark campaign.",
+    )
+    p_experiment.add_argument(
+        "--campaign", required=True, metavar="NAME",
+        help="Stable campaign name used for its artifact directory.",
+    )
+    p_experiment.add_argument(
+        "--attempts", type=int, default=3, metavar="N",
+        help="Independent attempts per task and variant (default: %(default)s).",
+    )
+    p_experiment.add_argument(
+        "--variants", default="baseline,haiku,retrieval", metavar="LIST",
+        help="Comma-separated subset of baseline,haiku,retrieval.",
+    )
+    p_experiment.add_argument(
+        "--tasks", default=DEFAULT_TASKS_DIR, metavar="DIR",
+        help="Task-set root (default: %(default)s).",
+    )
+    p_experiment.add_argument(
+        "--cost-cap", type=float, default=40.0, metavar="USD",
+        help="Stop launching attempts after this campaign cost (default: %(default)s).",
+    )
+    p_experiment.add_argument(
+        "--publish", action="store_true",
+        help="Write versionable eval/artifacts output; requires a clean Git worktree.",
+    )
     # —— run（v2）：指向真实 git 仓库，以其失败的测试为目标修到绿 ——
     p_run = sub.add_parser(
         "run",
@@ -151,7 +194,6 @@ def cmd_solve(args: argparse.Namespace, config: Config) -> int:
 
     注意 solve 不做 solved 判定——它只给人看过程，判分是 bench / harness 的事。
     """
-    fixture_dir = os.path.join(args.tasks, "fixture")
     task = next((t for t in discover_tasks(args.tasks) if t.id == args.task_id), None)
     if task is None:
         print(f"错误：找不到任务 {args.task_id}（在 {args.tasks}/ 下）", file=sys.stderr)
@@ -159,7 +201,7 @@ def cmd_solve(args: argparse.Namespace, config: Config) -> int:
 
     config.stream = True  # V7：solve 开流式，模型文本边生成边显示
     print(f"▶ solve {task.id} · {task.title}\n")
-    with task_sandbox(fixture_dir, task.break_patch) as workdir:
+    with task_sandbox(task.fixture_dir, task.break_patch) as workdir:
         result = run_agent(
             workdir, task.description, config,
             on_text=lambda t: print(t, end="", flush=True),  # 实时打印模型文本
@@ -220,6 +262,40 @@ def cmd_bench(args: argparse.Namespace, config: Config) -> int:
     results = _load_all()
     render_scorecard(results, DEFAULT_SCORECARD)
     print(f"记分卡写入 {DEFAULT_SCORECARD}（{len(results)} 组结果）")
+    return 0
+
+
+def cmd_validate(args: argparse.Namespace) -> int:
+    """Run the dataset's green/red/reverse-patch gates without model access."""
+    try:
+        report = validate_task_dataset(args.tasks, timeout_s=args.timeout)
+    except Exception as e:
+        print(f"Dataset validation failed: {e}", file=sys.stderr)
+        return 1
+    if not report["valid"]:
+        print(f"INVALID: {report['n_tasks']} tasks across {report['n_fixtures']} fixtures")
+        for error in report["errors"]:
+            print(f"  - {error}")
+        return 1
+    print(f"VALID: {report['n_tasks']} tasks across {report['n_fixtures']} fixtures")
+    return 0
+
+
+def cmd_experiment(args: argparse.Namespace, config: Config) -> int:
+    variants = [item.strip() for item in args.variants.split(",") if item.strip()]
+    try:
+        summary = run_experiment(
+            args.tasks, config, args.campaign, args.attempts, variants,
+            args.cost_cap, publish=args.publish,
+            command=["python", "cli.py", *sys.argv[1:]],
+        )
+    except Exception as e:
+        print(f"Experiment failed: {e}", file=sys.stderr)
+        return 1
+    print(
+        f"Campaign {args.campaign}: {summary['n_attempt_records']} attempts, "
+        f"estimated cost ${summary['total_cost_usd']:.2f}"
+    )
     return 0
 
 
@@ -302,6 +378,10 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         return cmd_solve(args, config)
     if args.command == "bench":
         return cmd_bench(args, config)
+    if args.command == "validate":
+        return cmd_validate(args)
+    if args.command == "experiment":
+        return cmd_experiment(args, config)
     if args.command == "run":
         return cmd_run(args, config)
     return 1

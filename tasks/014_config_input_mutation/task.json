@@ -1,0 +1,11 @@
+{
+  "id": "014_config_input_mutation",
+  "title": "Keep deep_merge from mutating or aliasing its input",
+  "kind": "fix_bug",
+  "description": "Some configuration-loader tests are failing. Find the defect and make the full suite pass without editing tests.",
+  "target_tests": ["tests/test_merge.py::test_does_not_mutate_inputs", "tests/test_merge.py::test_result_does_not_alias_inputs"],
+  "fixture": "config_loader",
+  "difficulty": "medium",
+  "tags": ["aliasing", "boundary"],
+  "source": {"type": "synthetic", "notes": "authored for Luna"}
+}

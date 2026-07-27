@@ -1,0 +1,12 @@
+diff --git a/planner.py b/planner.py
+--- a/planner.py
++++ b/planner.py
+@@ -68,8 +68,6 @@ def plan_for(tasks, targets):
+     if unknown:
+         raise PlannerError(f"unknown targets: {', '.join(unknown)}")
+     needed = set(targets)
+-    for target in targets:
+-        needed.update(transitive_dependencies(tasks, target))
+     return [task_id for task_id in topological_order(tasks) if task_id in needed]
+ 
+ 

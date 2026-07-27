@@ -1,0 +1,11 @@
+{
+  "id": "026_planner_cycle_detection",
+  "title": "Raise a useful error when the dependency graph contains a cycle",
+  "kind": "implement_stub",
+  "description": "Some dependency-planner tests are failing. Find the defect and make the full suite pass without editing tests.",
+  "target_tests": ["tests/test_planner.py::test_cycle_raises_with_blocked_tasks"],
+  "fixture": "dependency_planner",
+  "difficulty": "medium",
+  "tags": ["cycle-detection", "graph", "error-handling"],
+  "source": {"type": "synthetic", "notes": "authored for Luna"}
+}

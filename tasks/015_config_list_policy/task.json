@@ -1,0 +1,11 @@
+{
+  "id": "015_config_list_policy",
+  "title": "Replace lists instead of concatenating configuration layers",
+  "kind": "fix_bug",
+  "description": "Some configuration-loader tests are failing. Find the defect and make the full suite pass without editing tests.",
+  "target_tests": ["tests/test_merge.py::test_lists_are_replaced"],
+  "fixture": "config_loader",
+  "difficulty": "basic",
+  "tags": ["collection-semantics", "boundary"],
+  "source": {"type": "synthetic", "notes": "authored for Luna"}
+}

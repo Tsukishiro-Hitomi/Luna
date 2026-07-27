@@ -1,0 +1,12 @@
+diff --git a/merge.py b/merge.py
+--- a/merge.py
++++ b/merge.py
+@@ -15,6 +15,8 @@ def deep_merge(base, override):
+     for key, value in override.items():
+         if key in result and isinstance(result[key], dict) and isinstance(value, dict):
+             result[key] = deep_merge(result[key], value)
++        elif key in result and isinstance(result[key], list) and isinstance(value, list):
++            result[key] = deepcopy(result[key] + value)
+         else:
+             result[key] = deepcopy(value)
+     return result

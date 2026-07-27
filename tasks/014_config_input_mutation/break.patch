@@ -1,0 +1,12 @@
+diff --git a/merge.py b/merge.py
+--- a/merge.py
++++ b/merge.py
+@@ -11,7 +11,7 @@ def deep_merge(base, override):
+     """
+     if not isinstance(base, dict) or not isinstance(override, dict):
+         raise ConfigError("deep_merge expects two dictionaries")
+-    result = deepcopy(base)
++    result = base
+     for key, value in override.items():
+         if key in result and isinstance(result[key], dict) and isinstance(value, dict):
+             result[key] = deep_merge(result[key], value)

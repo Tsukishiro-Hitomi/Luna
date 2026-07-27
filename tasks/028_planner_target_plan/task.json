@@ -1,0 +1,11 @@
+{
+  "id": "028_planner_target_plan",
+  "title": "Include all required dependencies in a targeted execution plan",
+  "kind": "fix_bug",
+  "description": "Some dependency-planner tests are failing. Find the defect and make the full suite pass without editing tests.",
+  "target_tests": ["tests/test_planner.py::test_plan_for_includes_dependencies_but_excludes_unrelated_tasks", "tests/test_planner.py::test_plan_for_multiple_targets_shares_dependencies"],
+  "fixture": "dependency_planner",
+  "difficulty": "hard",
+  "tags": ["graph-traversal", "cross-file", "integration"],
+  "source": {"type": "synthetic", "notes": "authored for Luna"}
+}

@@ -1,0 +1,33 @@
+diff --git a/tests/test_itsdangerous/test_serializer.py b/tests/test_itsdangerous/test_serializer.py
+index cdc4191..e4b1a8f 100644
+--- a/tests/test_itsdangerous/test_serializer.py
++++ b/tests/test_itsdangerous/test_serializer.py
+@@ -53,6 +53,11 @@ class TestSerializer:
+     def test_serializer(self, serializer: Serializer, value: Any):
+         assert serializer.loads(serializer.dumps(value)) == value
+ 
++    def test_none_salt_uses_signer_default(self, value: Any):
++        serializer = Serializer("secret-key", salt=None)
++        signed = serializer.dumps(value)
++        assert serializer.loads(signed) == value
++
+     @pytest.mark.parametrize(
+         "transform",
+         (
+diff --git a/tests/test_itsdangerous/test_signer.py b/tests/test_itsdangerous/test_signer.py
+index 1e05388..4f0f434 100644
+--- a/tests/test_itsdangerous/test_signer.py
++++ b/tests/test_itsdangerous/test_signer.py
+@@ -31,6 +31,12 @@ class TestSigner:
+         out = signer.unsign(signed)
+         assert out == b"my string"
+ 
++    def test_none_salt_uses_default(self):
++        signer = Signer("secret-key", salt=None)
++        signed = signer.sign("my string")
++        assert signer.salt == b"itsdangerous.Signer"
++        assert signer.unsign(signed) == b"my string"
++
+     def test_no_separator(self, signer):
+         signed = signer.sign("my string")
+         signed = signed.replace(signer.sep, b"*", 1)

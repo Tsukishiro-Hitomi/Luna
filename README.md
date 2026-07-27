@@ -44,8 +44,8 @@ Both funnel into the same agent loop and the same test-oracle scoring.
   fresh branch, never commits or resets your work, prints the diff).
 - **Path-confined tools** — every file op is sandboxed to the work directory; the test
   command is the only thing that runs your code.
-- **Benchmark + ablations** — a 12-task controlled set with a reproducible scorecard
-  (model / retrieval ablations included).
+- **Benchmark + ablations** — 30 controlled repair tasks across three independent Python
+  fixtures, with offline validity gates and resumable repeated experiments.
 - **Streaming, retrieval, budgets** — live token streaming, optional embedding retrieval
   to seed context, and a per-task USD cost ceiling.
 - **Chat frontend** — natural-language path extraction, persona small-talk, a time-aware
@@ -100,6 +100,10 @@ python serve.py            # → http://127.0.0.1:8000  (Ctrl-C to stop)
 
 ## Results
 
+> The figures below are the last published single-attempt run of the original 12-task
+> expression fixture. The expanded 30-task dataset is fully validated offline; its
+> three-attempt campaign will be published separately so old and new results are not mixed.
+
 <!-- from `python cli.py bench` (label=baseline): 12 controlled tasks, no retrieval / no self-correction -->
 
 | model            | pass@1        | avg steps | avg tokens | avg cost |
@@ -144,16 +148,32 @@ with one attempt per task. See the [full per-task scorecard](eval/scorecard.md).
 - **The LLM seam** (`agent/llm.py`) — one thin wrapper over the Anthropic SDK (through an
   aggregation gateway), owning retries, streaming, and token/cost accounting. `agent/config.py`
   is the single knob panel (model, budgets, timeouts, price table).
-- **The task set** (`tasks/fixture/`) — a compact arithmetic-expression evaluator in three
-  stages: `tokenizer` (source → tokens), `parser` (tokens → AST via recursive descent, with
-  real operator precedence, left-associativity, and unary minus), and `evaluator` (AST →
-  number; true division, divide-by-zero raises), over a shared `errors` hierarchy. Pristine,
-  it's fully green: 51 pytest cases. Each `tasks/NNN_*/` applies a `break.patch` that breaks
-  exactly one function, turning a known subset of those tests red.
+- **The task set** (`tasks/`) — 30 repair tasks across three independent, standard-library
+  Python fixtures: an expression evaluator (12 tasks / 51 tests), a layered configuration
+  loader (9 / 28), and a dependency planner (9 / 22). Tasks carry fixture, difficulty, tag,
+  and provenance metadata. `python cli.py validate` proves each pristine suite is green,
+  each patch turns its declared targets red, reverse-patching restores the baseline, and
+  fixture source remains unchanged.
 - **Scoring** (`eval/run_bench.py`) — after the agent stops, the harness restores the
   pristine test files (so a run can't cheat by editing tests), then independently re-runs the
   full `pytest`. A task is *solved* iff its target tests pass **and** no previously-green test
   newly fails (regression check).
+
+## Repeated experiments
+
+The `experiment` command runs resumable multi-attempt campaigns and preserves every terminal
+attempt in JSONL. Reports include means, sample standard deviations, medians, 95% Wilson
+intervals, per-fixture/difficulty breakdowns, and paired deltas against baseline.
+
+```bash
+python cli.py validate
+python cli.py experiment --campaign multi_repo_v1 --attempts 3 \
+  --variants baseline,haiku,retrieval --cost-cap 40 --publish
+```
+
+Official publish mode requires a clean Git tree and writes a secret-free manifest, raw
+attempts, summary, and report under `eval/artifacts/<campaign>/`. Scratch campaigns remain
+ignored under `eval/results/`.
 
 ## Run on a real repo
 
@@ -176,6 +196,18 @@ and fixes them to green — the fixture task set, generalized to real code (via 
 python cli.py run ~/proj --target tests/test_x.py::test_y     # narrow the goal
 python cli.py run ~/proj --test-cmd "make test" --budget 2.0 --max-steps 60
 ```
+
+### Real-repository case study
+
+Luna was also evaluated on the public Pallets `itsdangerous` issue
+[#237](https://github.com/pallets/itsdangerous/issues/237), pinned immediately before the
+upstream fix. With tracked regression tests, the repository started at 421 passed / 16 failed.
+Luna repaired both `Signer` and `Serializer` in 12 steps for an estimated $0.4187; the
+independent full-suite verdict was **437 passed / 0 failed / 0 regressions**. Reproduction,
+provenance, license, metrics, and the generated patch are stored in
+[`eval/real_cases/itsdangerous_237/`](eval/real_cases/itsdangerous_237/).
+
+This is reported as one case study, not included in controlled-benchmark pass@1.
 
 ## Chat with Luna
 
@@ -212,11 +244,15 @@ agent/            the agent itself
   llm.py            Anthropic-via-gateway wrapper + token/cost accounting
   config.py         single knob panel (model, budgets, price table) + cost_of
   profile.py        remembers your name for the CLI greeting
-tasks/            fixture/ (pristine evaluator lib + tests) + 001..012/ (task.json + break.patch)
+tasks/            30 repair tasks + 3 pristine fixtures
+  fixture/          legacy expression evaluator fixture
+  fixtures/         config_loader + dependency_planner fixtures
 eval/
   run_bench.py      the benchmark: run each task, judge, write scorecard.md
+  experiment.py     resumable attempts, manifests, statistics, and reports
   run_repo.py       real-repo runner (git preflight → agent → restore tests → judge)
-tests/            121 unit tests for tools / sandbox / llm / loop / config / profile / run_repo
+  real_cases/       pinned real-repository reproductions and Luna patches
+tests/            148 offline tests for the Agent, harness, campaigns, and case artifacts
 cli.py            solve / bench / run entrypoints
 serve.py          Luna chat UI — HTTP server + routing + static dispatch (thin)
 web_backend.py    its logic: parse message → chat_reply / run_fix (no HTTP)
@@ -241,11 +277,12 @@ Secrets are read straight from the environment and never enter `Config`, logs, o
 ## Testing
 
 ```bash
-python -m pytest -q        # 121 tests, all offline (agent runs are monkeypatched)
+python -m pytest -q        # 148 tests, all offline (agent runs are monkeypatched)
 ```
 
-The suite covers the tools, sandbox path-confinement, the LLM wrapper, the loop, config, the
-name profile, and the real-repo orchestrator — none of it hits the gateway.
+The suite covers tools, path confinement, the LLM wrapper, loop, config, multi-fixture
+validation, experiment statistics and resume behavior, real-case artifact integrity, and the
+real-repo orchestrator — none of it hits the gateway.
 
 ## Limitations & non-goals
 
@@ -307,7 +344,8 @@ Luna 是一个从零构建的编程 Agent：给它一个存在失败测试的仓
 - **真实仓库模式**——可以指向自己的 Git 仓库；默认检查工作区是否干净、新建分支、绝不自动提交
   或重置用户改动，并在结束时打印 diff。
 - **路径受限工具**——所有文件操作都被限制在工作目录内；只有测试命令会执行目标仓库的代码。
-- **基准测试与消融实验**——包含 12 个受控任务和可复现的记分卡，并提供模型与检索消融对照。
+- **基准测试与消融实验**——包含 3 个独立 Python fixture、30 个受控修复任务、离线有效性闸门，
+  并支持可恢复的重复实验。
 - **流式输出、检索与预算**——支持实时 token 流、可选的 embedding 检索，以及单任务美元成本上限。
 - **对话前端**——支持自然语言路径提取、角色闲聊、随时间变化的问候、结果卡片和可替换立绘；
   全部基于标准库 `http.server`，无需额外 Web 框架。
@@ -360,6 +398,9 @@ python serve.py            # → http://127.0.0.1:8000（按 Ctrl-C 停止）
 
 ## 实验结果
 
+> 以下数字来自原始 12 题表达式 fixture 最近一次发布的单次实验。扩展后的 30 题数据集已经通过
+> 完整离线验证；它的三次重复实验会单独发布，避免将新旧结果混在一起。
+
 <!-- 来自 `python cli.py bench`（label=baseline）：12 个受控任务，不启用检索和自我纠正 -->
 
 | 模型 | pass@1 | 平均步数 | 平均 token | 平均成本 |
@@ -400,12 +441,26 @@ python serve.py            # → http://127.0.0.1:8000（按 Ctrl-C 停止）
   所有路径都通过 `agent/sandbox.py` 限定在工作目录内；错误始终返回字符串而不是向循环抛异常。
 - **LLM 接口层**（`agent/llm.py`）——对 Anthropic SDK 的薄封装，通过聚合网关调用模型，统一负责
   重试、流式输出和 token/成本统计。`agent/config.py` 集中管理模型、预算、超时和价格表。
-- **任务集**（`tasks/fixture/`）——一个小型算术表达式求值器，包含 tokenizer（源码到 token）、
-  parser（递归下降构建 AST，支持优先级、左结合和一元负号）与 evaluator（AST 到数值，支持真除法
-  和除零异常）。纯净版本拥有 51 个全绿 pytest 用例。每个 `tasks/NNN_*/` 都通过 `break.patch`
-  精确破坏一个函数，使已知测试子集变红。
+- **任务集**（`tasks/`）——30 个修复任务，分布在三个仅依赖标准库的独立 Python fixture：
+  表达式求值器（12 题 / 51 个测试）、分层配置加载器（9 / 28）和依赖规划器（9 / 22）。任务包含
+  fixture、难度、标签和来源元数据。`python cli.py validate` 会证明每个纯净测试集全绿、每份补丁
+  都能让声明目标变红、反向补丁能恢复基线，并且验证过程不会改变 fixture 源码。
 - **评分系统**（`eval/run_bench.py`）——Agent 停止后，评测器恢复原始测试，防止通过修改测试作弊，
   然后独立运行完整 pytest。只有目标测试全部通过并且没有原本为绿的测试发生回归时，任务才算解决。
+
+## 重复实验
+
+`experiment` 命令可以运行和恢复多次尝试，并将每个已结束的尝试立即保存为 JSONL。报告包含均值、
+样本标准差、中位数、95% Wilson 区间、按 fixture/难度的分组结果，以及相对于 baseline 的成对差异。
+
+```bash
+python cli.py validate
+python cli.py experiment --campaign multi_repo_v1 --attempts 3 \
+  --variants baseline,haiku,retrieval --cost-cap 40 --publish
+```
+
+正式发布模式要求 Git 工作区干净，并在 `eval/artifacts/<campaign>/` 下写入不含密钥的 manifest、
+原始尝试、统计摘要和报告。临时实验仍写入被忽略的 `eval/results/`。
 
 ## 在真实仓库上运行
 
@@ -427,6 +482,17 @@ python serve.py            # → http://127.0.0.1:8000（按 Ctrl-C 停止）
 python cli.py run ~/proj --target tests/test_x.py::test_y     # 缩小目标范围
 python cli.py run ~/proj --test-cmd "make test" --budget 2.0 --max-steps 60
 ```
+
+### 真实仓库案例
+
+Luna 还在 Pallets 公开的 `itsdangerous`
+[#237](https://github.com/pallets/itsdangerous/issues/237) 上进行了测试，代码固定在上游修复前的提交。
+加入可追踪的回归测试后，基线为 421 passed / 16 failed。Luna 用 12 步同时修复了 `Signer` 和
+`Serializer`，估算成本为 $0.4187；独立全量复判结果为 **437 passed / 0 failed / 0 回归**。
+复现方法、来源、许可证、指标和生成的补丁保存在
+[`eval/real_cases/itsdangerous_237/`](eval/real_cases/itsdangerous_237/)。
+
+这是一个单独案例，不计入受控 benchmark 的 pass@1。
 
 ## 与 Luna 对话
 
@@ -461,11 +527,15 @@ agent/            Agent 核心实现
   llm.py            Anthropic 聚合网关封装与 token/成本统计
   config.py         模型、预算、价格表和 cost_of 的集中配置
   profile.py        记录用户名，用于 CLI 问候
-tasks/            fixture/（纯净求值器与测试）+ 001..012/（task.json + break.patch）
+tasks/            30 个修复任务 + 3 个纯净 fixture
+  fixture/          兼容旧结构的表达式求值器 fixture
+  fixtures/         config_loader + dependency_planner fixture
 eval/
   run_bench.py      运行任务、独立判定并生成 scorecard.md
+  experiment.py     可恢复尝试、manifest、统计和报告
   run_repo.py       真实仓库流程：Git 预检 → Agent → 恢复测试 → 独立判定
-tests/            工具、沙箱、LLM、循环、配置、profile 和 run_repo 的 121 个单元测试
+  real_cases/       固定版本的真实仓库复现与 Luna 补丁
+tests/            Agent、harness、重复实验和案例产物的 148 个离线测试
 cli.py            solve / bench / run 命令入口
 serve.py          Luna 对话界面：HTTP 服务、路由与静态分发
 web_backend.py    解析消息并分流到 chat_reply / run_fix 的业务逻辑
@@ -490,11 +560,11 @@ assets/           可选的 luna.* 立绘；不存在时使用内置 SVG
 ## 测试
 
 ```bash
-python -m pytest -q        # 121 个测试，全部离线运行（Agent 调用使用 monkeypatch 替换）
+python -m pytest -q        # 148 个测试，全部离线运行（Agent 调用使用 monkeypatch 替换）
 ```
 
-测试覆盖工具、路径限制、LLM 封装、Agent 循环、配置、用户名 profile 和真实仓库编排流程，
-不会访问模型网关。
+测试覆盖工具、路径限制、LLM 封装、Agent 循环、配置、多 fixture 验证、实验统计与恢复逻辑、
+真实案例产物完整性和真实仓库编排流程，不会访问模型网关。
 
 ## 限制与非目标
 

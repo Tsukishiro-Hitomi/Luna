@@ -1,0 +1,11 @@
+{
+  "id": "027_planner_transitive_dependencies",
+  "title": "Traverse the full transitive dependency graph",
+  "kind": "fix_bug",
+  "description": "Some dependency-planner tests are failing. Find the defect and make the full suite pass without editing tests.",
+  "target_tests": ["tests/test_planner.py::test_transitive_dependencies_include_full_chain", "tests/test_planner.py::test_transitive_dependencies_deduplicate_diamond"],
+  "fixture": "dependency_planner",
+  "difficulty": "medium",
+  "tags": ["graph-traversal", "cross-file", "regression-prone"],
+  "source": {"type": "synthetic", "notes": "authored for Luna"}
+}

@@ -1,0 +1,11 @@
+diff --git a/interpolate.py b/interpolate.py
+--- a/interpolate.py
++++ b/interpolate.py
+@@ -13,6 +13,6 @@ def _expand_string(value, env):
+             return str(env[name])
+         if default is not None:
+             return default
+-        raise ConfigError(f"missing environment variable: {name}")
++        return ""
+ 
+     return _VARIABLE.sub(replace, value)

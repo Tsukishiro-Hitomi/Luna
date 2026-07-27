@@ -1,0 +1,11 @@
+{
+  "id": "023_planner_negative_duration",
+  "title": "Reject negative and boolean task durations",
+  "kind": "fix_bug",
+  "description": "Some dependency-planner tests are failing. Find the defect and make the full suite pass without editing tests.",
+  "target_tests": ["tests/test_parser.py::test_negative_duration_raises", "tests/test_parser.py::test_boolean_is_not_a_duration"],
+  "fixture": "dependency_planner",
+  "difficulty": "basic",
+  "tags": ["validation", "type-safety", "boundary"],
+  "source": {"type": "synthetic", "notes": "authored for Luna"}
+}

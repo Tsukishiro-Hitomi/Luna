@@ -1,0 +1,11 @@
+{
+  "id": "018_config_recursive_interpolation",
+  "title": "Interpolate placeholders recursively inside nested lists",
+  "kind": "fix_bug",
+  "description": "Some configuration-loader tests are failing. Find the defect and make the full suite pass without editing tests.",
+  "target_tests": ["tests/test_interpolate.py::test_recurses_through_lists_and_dicts"],
+  "fixture": "config_loader",
+  "difficulty": "medium",
+  "tags": ["nested-data", "cross-file"],
+  "source": {"type": "synthetic", "notes": "authored for Luna"}
+}

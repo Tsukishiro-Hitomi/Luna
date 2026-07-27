@@ -1,0 +1,12 @@
+diff --git a/parser.py b/parser.py
+--- a/parser.py
++++ b/parser.py
+@@ -14,8 +14,6 @@ def parse_tasks(items):
+         task_id = item.get("id")
+         if not isinstance(task_id, str) or not task_id.strip():
+             raise PlannerError("task id must be a non-empty string")
+-        if task_id in seen:
+-            raise DuplicateTaskError(f"duplicate task id: {task_id}")
+         dependencies = item.get("dependencies", [])
+         if not isinstance(dependencies, list) or not all(isinstance(dep, str) for dep in dependencies):
+             raise PlannerError(f"dependencies for {task_id} must be a list of strings")

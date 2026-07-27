@@ -2,6 +2,7 @@
 """
 
 import json
+import hashlib
 import os
 import shutil
 import subprocess
@@ -37,19 +38,59 @@ class Task:
     target_tests: List[str]
     dir: str
     break_patch: str
+    fixture_id: str = "expression"
+    fixture_dir: str = ""
+    difficulty: str = "basic"
+    tags: List[str] = field(default_factory=list)
+    source: dict = field(default_factory=lambda: {
+        "type": "synthetic", "notes": "authored for Luna",
+    })
+
+
+class DatasetError(ValueError):
+    """Raised when strict task discovery finds an invalid dataset definition."""
 
 
 # ─────────────────────────────────────────────────────────────────────────────
 # 任务发现与工作区准备
 # ─────────────────────────────────────────────────────────────────────────────
 
-def discover_tasks(tasks_dir: str) -> List[Task]:
+def _fixture_dir(tasks_dir: str, fixture_id: str, explicit: bool) -> str:
+    """Resolve a fixture ID without allowing metadata to escape ``tasks_dir``.
+
+    Legacy tasks omit ``fixture`` and continue to use ``tasks/fixture``. Explicit
+    fixture IDs live under ``tasks/fixtures/<id>``; ``expression`` also falls back to
+    the legacy location so the existing 12 tasks can be migrated incrementally.
+    """
+    if not fixture_id or os.path.isabs(fixture_id) or fixture_id in (".", ".."):
+        raise ValueError(f"invalid fixture id: {fixture_id!r}")
+    if any(part in ("", ".", "..") for part in fixture_id.replace("\\", "/").split("/")):
+        raise ValueError(f"invalid fixture id: {fixture_id!r}")
+
+    root = os.path.realpath(tasks_dir)
+    if not explicit:
+        candidate = os.path.join(root, "fixture")
+    else:
+        candidate = os.path.join(root, "fixtures", fixture_id)
+        if fixture_id == "expression" and not os.path.isdir(candidate):
+            candidate = os.path.join(root, "fixture")
+    candidate = os.path.realpath(candidate)
+    if not (candidate == root or candidate.startswith(root + os.sep)):
+        raise ValueError(f"fixture escapes task root: {fixture_id!r}")
+    if not os.path.isdir(candidate):
+        raise ValueError(f"fixture directory does not exist: {candidate}")
+    return candidate
+
+
+def discover_tasks(tasks_dir: str, *, strict: bool = False) -> List[Task]:
     """扫描任务目录，解析成按 id 排序的 Task 列表。
     """
     tasks = []
+    errors = []
+    seen_ids = set()
     for name in sorted(os.listdir(tasks_dir)):
         d = os.path.join(tasks_dir, name)
-        if name == "fixture" or not os.path.isdir(d) or not name[:1].isdigit():
+        if name in ("fixture", "fixtures") or not os.path.isdir(d) or not name[:1].isdigit():
             continue
         tj = os.path.join(d, "task.json")
         try:
@@ -60,23 +101,58 @@ def discover_tasks(tasks_dir: str) -> List[Task]:
                     raise ValueError(f"缺字段 {k}")
             if meta["kind"] not in ("fix_bug", "implement_stub"):
                 raise ValueError(f"kind 非法：{meta['kind']}")
-            if not meta["target_tests"]:
+            if meta["id"] != name:
+                raise ValueError(f"id {meta['id']!r} does not match directory {name!r}")
+            if meta["id"] in seen_ids:
+                raise ValueError(f"duplicate id: {meta['id']}")
+            if not isinstance(meta["target_tests"], list) or not meta["target_tests"]:
                 raise ValueError("target_tests 为空")
+            if not all(isinstance(t, str) and t.startswith("tests/") for t in meta["target_tests"]):
+                raise ValueError("target_tests must contain tests/... node IDs")
+            fixture_id = meta.get("fixture", "expression")
+            if not isinstance(fixture_id, str):
+                raise ValueError("fixture must be a string")
+            fixture_dir = _fixture_dir(tasks_dir, fixture_id, "fixture" in meta)
+            difficulty = meta.get("difficulty", "basic")
+            if difficulty not in ("basic", "medium", "hard"):
+                raise ValueError(f"invalid difficulty: {difficulty!r}")
+            tags = meta.get("tags", [])
+            if not isinstance(tags, list) or not all(isinstance(tag, str) for tag in tags):
+                raise ValueError("tags must be a list of strings")
+            source = meta.get("source", {
+                "type": "synthetic", "notes": "authored for Luna",
+            })
+            if not isinstance(source, dict) or source.get("type") not in ("synthetic", "upstream"):
+                raise ValueError("source.type must be synthetic or upstream")
+            break_patch = os.path.abspath(os.path.join(d, "break.patch"))
+            if not os.path.isfile(break_patch):
+                raise ValueError("missing break.patch")
             tasks.append(Task(
                 id=meta["id"], title=meta["title"], kind=meta["kind"],
                 description=meta["description"], target_tests=list(meta["target_tests"]),
                 dir=os.path.abspath(d),
-                break_patch=os.path.abspath(os.path.join(d, "break.patch")),
+                break_patch=break_patch,
+                fixture_id=fixture_id,
+                fixture_dir=fixture_dir,
+                difficulty=difficulty,
+                tags=list(tags),
+                source=dict(source),
             ))
+            seen_ids.add(meta["id"])
         except Exception as e:
-            print(f"[discover_tasks] 跳过坏任务 {name}：{e}", file=sys.stderr)
+            message = f"{name}: {e}"
+            errors.append(message)
+            if not strict:
+                print(f"[discover_tasks] 跳过坏任务 {message}", file=sys.stderr)
+    if strict and errors:
+        raise DatasetError("invalid task dataset:\n- " + "\n- ".join(errors))
     return sorted(tasks, key=lambda t: t.id)
 
 
 def prepare_workspace(task: Task, dest_root: Optional[str] = None) -> str:
     """给一道题准备打好 break.patch 的隔离工作副本。
     """
-    fixture_dir = os.path.join(os.path.dirname(task.dir), "fixture")
+    fixture_dir = task.fixture_dir or os.path.join(os.path.dirname(task.dir), "fixture")
     return make_workspace(fixture_dir, task.break_patch)
 
 
@@ -136,10 +212,112 @@ def restore_pristine_tests(workspace: str, fixture_dir: str) -> None:
     用 fixture_dir 的 tests/ 和 conftest.py 覆盖 workspace 里的同名文件。时机是 run_agent
     之后、run_pytest 之前。
     """
-    shutil.copytree(os.path.join(fixture_dir, "tests"),
-                    os.path.join(workspace, "tests"), dirs_exist_ok=True)
-    shutil.copy(os.path.join(fixture_dir, "conftest.py"),
-                os.path.join(workspace, "conftest.py"))
+    source_tests = os.path.join(fixture_dir, "tests")
+    workspace_tests = os.path.join(workspace, "tests")
+    shutil.rmtree(workspace_tests, ignore_errors=True)
+    shutil.copytree(source_tests, workspace_tests)
+
+    source_conftest = os.path.join(fixture_dir, "conftest.py")
+    workspace_conftest = os.path.join(workspace, "conftest.py")
+    if os.path.isfile(source_conftest):
+        shutil.copy(source_conftest, workspace_conftest)
+    elif os.path.exists(workspace_conftest):
+        os.remove(workspace_conftest)
+
+
+def tree_digest(root: str) -> str:
+    """Return a stable SHA-256 digest for a fixture tree, excluding bytecode caches."""
+    digest = hashlib.sha256()
+    for dirpath, dirnames, filenames in os.walk(root):
+        dirnames[:] = sorted(d for d in dirnames if d not in ("__pycache__", ".pytest_cache"))
+        for name in sorted(filenames):
+            if name.endswith((".pyc", ".pyo")):
+                continue
+            path = os.path.join(dirpath, name)
+            rel = os.path.relpath(path, root).replace(os.sep, "/")
+            digest.update(rel.encode("utf-8"))
+            digest.update(b"\0")
+            with open(path, "rb") as f:
+                for chunk in iter(lambda: f.read(65536), b""):
+                    digest.update(chunk)
+            digest.update(b"\0")
+    return digest.hexdigest()
+
+
+def validate_task_dataset(tasks_dir: str, timeout_s: int = 60) -> dict:
+    """Validate every fixture and break patch without calling an LLM.
+
+    The red gate requires every declared target to become non-passing and at least one
+    test to fail. The same workspace is then reverse-patched and must exactly recover the
+    pristine per-test outcomes. Fixture digests are checked before and after validation.
+    """
+    tasks = discover_tasks(tasks_dir, strict=True)
+    if not tasks:
+        raise DatasetError("task dataset is empty")
+
+    fixture_dirs = {task.fixture_id: task.fixture_dir for task in tasks}
+    before = {fid: tree_digest(path) for fid, path in fixture_dirs.items()}
+    baselines = {}
+    errors = []
+    task_reports = []
+
+    for fixture_id, fixture_dir in sorted(fixture_dirs.items()):
+        baseline = capture_baseline(fixture_dir)
+        if not baseline:
+            errors.append(f"fixture {fixture_id}: collected no tests")
+        bad = sorted(k for k, value in baseline.items() if value != "passed")
+        if bad:
+            errors.append(f"fixture {fixture_id}: pristine tests are not green: {bad}")
+        baselines[fixture_id] = baseline
+
+    for task in tasks:
+        report = {"task_id": task.id, "fixture": task.fixture_id, "valid": False, "errors": []}
+        workdir = None
+        try:
+            workdir = prepare_workspace(task)
+            broken = run_pytest(workdir, timeout_s)
+            nonpassing = {k for k, value in broken.items() if value != "passed"}
+            missing_red = sorted(t for t in task.target_tests if t not in nonpassing)
+            if missing_red:
+                report["errors"].append(f"declared targets did not turn red: {missing_red}")
+            if not nonpassing:
+                report["errors"].append("patch produced no non-passing tests")
+
+            reverse = subprocess.run(
+                ["git", "apply", "-R", "-p1", task.break_patch], cwd=workdir,
+                capture_output=True, text=True,
+            )
+            if reverse.returncode != 0:
+                report["errors"].append(f"reverse patch failed: {reverse.stderr.strip()}")
+            else:
+                restored = run_pytest(workdir, timeout_s)
+                if restored != baselines[task.fixture_id]:
+                    report["errors"].append("reverse patch did not restore pristine outcomes")
+        except subprocess.TimeoutExpired:
+            report["errors"].append(f"pytest timed out after {timeout_s}s")
+        except Exception as e:
+            report["errors"].append(f"{type(e).__name__}: {e}")
+        finally:
+            if workdir:
+                cleanup_workspace(workdir)
+        report["valid"] = not report["errors"]
+        if report["errors"]:
+            errors.extend(f"task {task.id}: {e}" for e in report["errors"])
+        task_reports.append(report)
+
+    after = {fid: tree_digest(path) for fid, path in fixture_dirs.items()}
+    for fixture_id in before:
+        if before[fixture_id] != after[fixture_id]:
+            errors.append(f"fixture {fixture_id}: source tree changed during validation")
+
+    return {
+        "valid": not errors,
+        "n_tasks": len(tasks),
+        "n_fixtures": len(fixture_dirs),
+        "fixtures": sorted(fixture_dirs),
+        "task_reports": task_reports,
+        "errors": errors,
+    }
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -168,12 +346,13 @@ def run_one_task(task: Task, config: Config, baseline: Dict[str, str]) -> dict:
     最后无论成败都 cleanup 工作区。wall_s 只算 agent 主循环那段，不含准备副本和判定复跑，
     度量的是 agent 本身；成本直接读 result.total_cost_usd，不在这边重算。
     """
-    fixture_dir = os.path.join(os.path.dirname(task.dir), "fixture")
+    fixture_dir = task.fixture_dir or os.path.join(os.path.dirname(task.dir), "fixture")
     tr = {
         "task_id": task.id, "status": "ok", "solved": False,
         "steps": 0, "input_tokens": 0, "output_tokens": 0, "tokens": 0,
         "cost_usd": 0.0, "wall_s": 0.0, "stop_reason": None,
         "target_tests": task.target_tests, "regressions": [],
+        "fixture": task.fixture_id, "difficulty": task.difficulty, "tags": task.tags,
     }
     try:
         workdir = prepare_workspace(task)
@@ -213,14 +392,16 @@ def run_one_task(task: Task, config: Config, baseline: Dict[str, str]) -> dict:
 def run_bench(tasks_dir: str, config: Config, label: str) -> dict:
     """跑完整个任务集，把结果落盘并返回一个 BenchResult dict。
     """
-    fixture_dir = os.path.join(tasks_dir, "fixture")
-    baseline = capture_baseline(fixture_dir)
     tasks = discover_tasks(tasks_dir)
+    baselines = {}
+    for task in tasks:
+        if task.fixture_id not in baselines:
+            baselines[task.fixture_id] = capture_baseline(task.fixture_dir)
 
     task_results = []
     for t in tasks:
         print(f"[bench] ▶ {t.id} …", file=sys.stderr)
-        tr = run_one_task(t, config, baseline)
+        tr = run_one_task(t, config, baselines[t.fixture_id])
         print(f"[bench]   {t.id}: {'SOLVED' if tr['solved'] else tr['status']} "
               f"(steps={tr['steps']}, ${tr['cost_usd']:.4f})", file=sys.stderr)
         task_results.append(tr)

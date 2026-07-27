@@ -1,0 +1,12 @@
+diff --git a/planner.py b/planner.py
+--- a/planner.py
++++ b/planner.py
+@@ -100,7 +100,7 @@ def critical_path(tasks, target=None):
+     finish = {}
+     for task_id in topological_order(tasks):
+         task = known[task_id]
+-        previous = max((finish[dep] for dep in task.dependencies), default=0.0)
++        previous = min((finish[dep] for dep in task.dependencies), default=0.0)
+         finish[task_id] = previous + task.duration
+     if target is not None:
+         return finish[target]

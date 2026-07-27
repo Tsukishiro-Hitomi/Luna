@@ -1,0 +1,13 @@
+diff --git a/planner.py b/planner.py
+--- a/planner.py
++++ b/planner.py
+@@ -86,7 +86,8 @@ def execution_layers(tasks):
+         )
+         if not current:
+             raise CycleError(f"dependency cycle involving: {', '.join(sorted(remaining))}")
+-        layers.append(current)
++        for task_id in current:
++            layers.append([task_id])
+         complete.update(current)
+         remaining.difference_update(current)
+     return layers
