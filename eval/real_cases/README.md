@@ -1,8 +1,8 @@
 # Real-repository evaluation cases
 
-These cases provide external-validity evidence separately from Luna's controlled synthetic
-benchmark. A case is never included in controlled pass@1, and `reproduced` does not mean Luna
-solved it.
+This directory contains historical bugs from public Python projects. Each repository is pinned
+immediately before its upstream fix, then patched with the regression tests needed to reproduce
+the bug. These runs are kept separate from the synthetic benchmark.
 
 | case | project | public report/fix | status | verified baseline |
 |---|---|---|---|---:|
@@ -11,19 +11,19 @@ solved it.
 | `packaging_1345` | PyPA Packaging | pull request #1345 | solved | 62353 passed / 3 failed |
 | `cattrs_688` | python-attrs cattrs | pull request #688 | solved | 883 passed / 2 failed |
 
-## Status lifecycle
+## Status values
 
-- `planned`: provenance selected, reproduction not independently verified.
-- `reproduced`: the pinned pre-fix commit fails the tracked regression tests and the public
-  upstream repair passes the same test scope; Luna has not been run.
-- `solved`: Luna was run, its generated patch was independently judged, and run metrics were
-  recorded. Unsuccessful Luna runs must remain recorded rather than being silently removed.
+- `planned`: the case has been selected but not reproduced yet.
+- `reproduced`: the pinned commit fails the added regression tests, while the upstream fix
+  passes them. Luna has not been run.
+- `solved`: Luna has been run, the resulting patch has been tested, and the run metrics have
+  been recorded. Failed runs are kept as part of the result.
 
-Each directory contains a machine-readable `case.json`, a test-only `reproduction.patch`, a
-networked preparation script, pinned test dependencies, Luna's generated patch, and human
-reproduction instructions. The three newly added cases were selected and reproduced before
-any Luna run; Luna then solved all three for `$0.9660` total. This is a transparent three-case
-sample, not a general solve-rate claim.
-The registry at [`index.json`](index.json) is checked by `luna audit` for unique IDs, pinned
-commits, provenance consistency, safe paths, explicit pass@1 separation, and status/result
-consistency.
+Each case includes `case.json`, a test-only `reproduction.patch`, a preparation script, pinned
+test dependencies, reproduction notes, and—after a successful run—`luna.patch`. Click,
+Packaging, and cattrs were selected and reproduced before Luna was run; the three runs cost
+`$0.9660` in total.
+
+`luna audit` checks [`index.json`](index.json), referenced files, pinned commits, metadata, and
+the consistency between each case's status and recorded result. Four cases are far too few to
+estimate a general repair rate, so the table above should be read as individual case studies.

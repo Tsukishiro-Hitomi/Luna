@@ -2,11 +2,10 @@
 
 [English](#luna) | [Chinese](#chinese-version)
 
-> A test-driven autonomous coding agent, built from scratch — with a cat-eared face.
-> Hand it a repo and a red test suite; it locates the code, edits it, runs the tests,
-> reads the red/green, and iterates until the suite is green. Every result is scored by
-> an independent harness, so **pass@1 is an observed number, never the model's own word**.
-> Drive it from the CLI, or chat with **Luna**, the catgirl assistant on the front.
+> Luna is a small coding agent built to study the full repair loop: inspect a repository,
+> edit source files, run tests, and use the failures to decide what to try next. A separate
+> harness checks the final result. The project includes a CLI, a local chat interface, a
+> controlled benchmark, and several pinned open-source repair cases.
 
 <!-- badges: keep to 3-4, all must be real & green -->
 ![Python](https://img.shields.io/badge/python-3.9--3.12-blue)
@@ -20,13 +19,12 @@
 
 ## What it is
 
-Luna is a coding agent built from scratch: hand it a repo with failing tests and it
-locates the broken code, edits it, runs the tests, and iterates until green — the core
-loop that tools like Claude Code run, small enough to read end-to-end. What makes it
-more than a demo is **measurement**: every task is scored by a harness that independently
-re-runs pytest and checks for regressions, so the solve-rate is observed, not claimed.
+Luna implements the basic coding-agent loop in a codebase small enough to read end to end.
+Given a repository with failing tests, it searches the code, applies edits, and reruns the
+tests until it stops or reaches a budget limit. Evaluation is kept outside the agent loop:
+the harness restores the original tests, reruns pytest, and checks for regressions.
 
-Two ways in, one engine:
+There are two interfaces:
 
 - **CLI** (`cli.py`) — `solve` a benchmark task, `bench` the whole controlled set,
   `audit` committed evidence, or `run` the agent on a real git repo with failing tests.
@@ -34,9 +32,9 @@ Two ways in, one engine:
   assistant, takes a repo path in plain language, fixes the red tests, and replies with a
   result card. She'll also just chat back if you say hi.
 
-Both funnel into the same agent loop and the same test-oracle scoring.
+Both use the same agent loop and repository runner.
 
-## Feature tour
+## Features
 
 - **Test-oracle scoring** — the model never grades itself; a separate harness re-runs
   pytest against pristine tests and flags regressions.
@@ -49,7 +47,7 @@ Both funnel into the same agent loop and the same test-oracle scoring.
 - **Streaming, retrieval, budgets** — live token streaming, optional embedding retrieval
   to seed context, and a per-task USD cost ceiling.
 - **Chat frontend** — natural-language path extraction, persona small-talk, a time-aware
-  greeting, a polished result card, and a drop-in portrait slot — all on stdlib
+  greeting, a result card, and a drop-in portrait slot — all on stdlib
   `http.server`, no extra deps.
 
 ## Architecture
@@ -132,17 +130,15 @@ repository repair. See the committed [report](eval/artifacts/multi_repo_v1/repor
 [summary](eval/artifacts/multi_repo_v1/summary.json), and all 270
 [attempt records](eval/artifacts/multi_repo_v1/attempts.jsonl).
 
-## Engineering evidence
+## Reproducibility and CI
 
-- **Installable CLI:** `pyproject.toml` exposes the `luna` command with separated core,
-  development, and optional retrieval dependencies.
-- **Automated quality gate:** GitHub Actions runs the offline suite on Python 3.9, 3.11, and
-  3.12, compiles the source, validates all benchmark patches, and audits published evidence.
-- **Tamper-evident results:** `luna audit` rebuilds every committed summary and report from
-  raw JSONL attempts, rejects duplicate attempt IDs, scans artifacts for secrets/local paths,
-  and validates the real-case registry.
-- **Explicit external-validity boundary:** real-repository results are indexed with a pinned
-  commit, issue, license, reproduction, and status, and are never mixed into controlled pass@1.
+- `pyproject.toml` provides the `luna` command and keeps embedding retrieval optional.
+- GitHub Actions runs the offline suite on Python 3.9, 3.11, and 3.12, validates benchmark
+  patches, and checks the committed evaluation artifacts.
+- `luna audit` rebuilds summaries from the raw JSONL attempts, checks duplicate IDs and local
+  paths, and validates the real-case registry.
+- Real-repository cases record their commit, public issue or pull request, license, test patch,
+  and run status. Their results are reported separately from the controlled benchmark.
 
 ## How it works
 
@@ -187,8 +183,8 @@ ignored under `eval/results/`.
 
 ## Run on a real repo
 
-`python cli.py run <repo>` points the same agent at **any git repo that has failing tests**
-and fixes them to green — the fixture task set, generalized to real code (via `eval/run_repo.py`):
+`luna run <repo>` points the same agent at a Git repository with failing tests
+(implementation: `eval/run_repo.py`):
 
 - **Oracle = the failing tests.** It runs your suite, takes the currently-failing tests as
   the goal, edits the source, and re-runs. *Solved* = those tests pass **and** no
@@ -252,7 +248,7 @@ The frontend is stdlib `http.server` with no extra deps, split by concern:
   `handle_run` that routes between them. Pure dict-in/dict-out, so it's testable offline.
 - **presentation** — `web/`: `index.html` / `style.css` / `app.js`, plus a hand-drawn SVG
   catgirl. A time-aware greeting (client-side), a pastel/night theme via `prefers-color-scheme`,
-  and a polished result card. Drop any image at `assets/luna.png` (`.jpg`/`.webp` too) to use
+  and a result card. Drop any image at `assets/luna.png` (`.jpg`/`.webp` too) to use
   your own portrait — otherwise the built-in SVG is used.
 
 **Local only** — it binds `127.0.0.1` and runs the target repo's tests (arbitrary code), so
@@ -332,12 +328,11 @@ MIT
 
 <a id="chinese-version"></a>
 
-# 中文版本
+# 中文说明
 
-> 一个从零构建、由测试驱动的自主编程 Agent——还带着一张猫耳面孔。
-> 给它一个仓库和一组失败的测试，它会定位代码、修改文件、运行测试、读取红绿结果，
-> 并持续迭代，直到测试全部通过。每次运行都由独立评测器打分，因此 **pass@1 是实际观测值，
-> 而不是模型的自我评价**。你既可以通过 CLI 使用它，也可以在前端与猫娘代码助手 Luna 对话。
+> Luna 是我为了理解 coding agent 工作机制而写的一个小型项目。它会读取仓库、修改源码、
+> 运行测试，再根据失败信息继续调整。Agent 不负责给自己判分；运行结束后，评测脚本会
+> 恢复原始测试并检查回归。项目包含 CLI、本地聊天界面、受控任务集和真实开源项目案例。
 
 ![Python](https://img.shields.io/badge/python-3.9--3.12-blue)
 [![CI](https://github.com/Tsukishiro-Hitomi/Luna/actions/workflows/ci.yml/badge.svg)](https://github.com/Tsukishiro-Hitomi/Luna/actions/workflows/ci.yml)
@@ -348,33 +343,21 @@ MIT
 ![Luna 修复任务](docs/demo.gif)
 -->
 
-## 项目简介
+## 项目内容
 
-Luna 是一个从零构建的编程 Agent：给它一个存在失败测试的仓库，它会定位问题代码、
-修改文件、运行测试，并不断迭代直到测试通过。这是 Claude Code 等工具所采用的核心循环，
-但本项目规模足够小，可以完整阅读。它与普通演示项目的区别在于**可度量性**：每项任务都由
-独立评测器重新运行 pytest 并检查回归，因此解决率来自实际观测，而不是模型声称的结果。
+核心代码在 `agent/`，实现了一个 ReAct 风格的循环和六个文件/测试工具。仓库另外提供两个入口：
 
-两个入口，共用一个引擎：
+- `cli.py`：运行单题、批量评测、重复实验，或修复指定的 Git 仓库；
+- `serve.py`：本地 Web 界面，可以从聊天内容中提取仓库路径并调用同一套修复流程。
 
-- **CLI**（`cli.py`）——可用 `solve` 解决单个基准任务，用 `bench` 运行完整受控任务集，
-  用 `audit` 审计已提交证据，或用 `run` 在真实 Git 仓库中运行 Agent。
-- **对话界面**（`serve.py` + `web/`）——本地 Web 应用。猫耳代码助手 Luna 可以从自然语言中
-  获取仓库路径、修复失败测试，并返回结果卡片；如果只是向她问好，她也可以正常聊天。
+目前实现的功能包括：
 
-两个入口最终都会进入同一套 Agent 循环和测试预言机评分流程。
-
-## 功能概览
-
-- **测试预言机评分**——模型不为自己打分；独立评测器会使用原始测试重新运行 pytest 并检测回归。
-- **真实仓库模式**——可以指向自己的 Git 仓库；默认检查工作区是否干净、新建分支、绝不自动提交
-  或重置用户改动，并在结束时打印 diff。
-- **路径受限工具**——所有文件操作都被限制在工作目录内；只有测试命令会执行目标仓库的代码。
-- **基准测试与消融实验**——包含 3 个独立 Python fixture、30 个受控修复任务、离线有效性闸门，
-  并支持可恢复的重复实验。
-- **流式输出、检索与预算**——支持实时 token 流、可选的 embedding 检索，以及单任务美元成本上限。
-- **对话前端**——支持自然语言路径提取、角色闲聊、随时间变化的问候、结果卡片和可替换立绘；
-  全部基于标准库 `http.server`，无需额外 Web 框架。
+- 用 pytest 结果判断修复是否成功，并检查原本通过的测试有没有回归；
+- 在真实仓库运行前检查 Git 状态，新建工作分支，不自动提交或重置用户改动；
+- 将文件工具限制在目标工作目录内；
+- 30 个受控修复任务、可恢复的重复实验和原始结果归档；
+- 流式输出、单次运行预算，以及可选的 embedding 检索；
+- 一个只监听 `127.0.0.1` 的轻量 Web 界面。
 
 ## 架构
 
@@ -404,20 +387,20 @@ python3 -m venv .venv
 source .venv/bin/activate
 pip install -e ".[dev]"
 
-# 可选：同时安装 embedding 检索依赖
+# 如需使用 embedding 检索，再安装 retrieval extra
 # pip install -e ".[dev,retrieval]"
 
-# 复制密钥模板，并填写聚合网关凭据
+# 配置模型 API
 cp .env.example .env
-# 编辑 .env，设置 ANTHROPIC_API_KEY 和 ANTHROPIC_BASE_URL
+# 在 .env 中填写 ANTHROPIC_API_KEY 和 ANTHROPIC_BASE_URL
 
-# 解决单个基准任务，并在终端中流式显示 Agent 过程
+# 运行一个受控任务
 luna solve 001_mul_precedence
 
-# 运行完整基准测试，并写入 eval/scorecard.md
+# 运行整个任务集，结果写入 eval/scorecard.md
 luna bench
 
-# 修复你自己的、存在失败测试的 Git 仓库（新建分支并打印 diff）
+# 对已有失败测试的 Git 仓库运行 Agent
 luna run /path/to/repo
 luna run /path/to/repo --python /path/to/repo/.venv/bin/python
 
@@ -425,13 +408,14 @@ luna run /path/to/repo --python /path/to/repo/.venv/bin/python
 python serve.py            # → http://127.0.0.1:8000（按 Ctrl-C 停止）
 ```
 
-仍可使用 `pip install -r requirements.txt` 作为兼容安装方式。基准数据和 Web 资源有意保留在
-源码仓库中，因此开发时推荐使用 editable install。
+也可以继续使用 `pip install -r requirements.txt`。任务数据和 Web 静态文件都放在仓库里，
+因此开发时更适合使用 editable install。
 
 ## 实验结果
 
-正式的 `multi_repo_v1` campaign 对 30 个任务、每种条件各运行三次：共 **270 次独立判定尝试**，
-全部来自同一个干净提交（`acdbc5e`）和同一个固定任务摘要。Harness 错误不会被移出分母；本次为 0。
+`multi_repo_v1` 在同一个提交（`acdbc5e`）和同一份任务数据上运行。30 个任务在三种配置下
+各重复三次，共得到 **270 条运行记录**。如果运行过程本身报错，记录仍会保留在统计分母中；
+这次实验没有出现这类错误。
 
 | 实验条件 | 已解决尝试 | 解决率（95% Wilson 区间） | 平均步数±标准差 | 平均成本±标准差 |
 |---|:---:|:---:|:---:|:---:|
@@ -439,50 +423,46 @@ python serve.py            # → http://127.0.0.1:8000（按 Ctrl-C 停止）
 | haiku-4.5 | 90/90 | 100%（95.9%–100%） | 8.26±1.47 | $0.0378±0.0131 |
 | opus-4.8 + embedding 检索 | 90/90 | 100%（95.9%–100%） | 5.71±0.96 | $0.1468±0.0379 |
 
-完整 campaign 的估算总成本为 **$28.49**。每种条件在三个 fixture 中都解决了全部尝试
+整组实验的估算成本为 **$28.49**。三种配置在各 fixture 上都通过了全部运行
 （表达式：36/36，配置加载器：27/27，依赖规划器：27/27）。
 
-任务集仍然存在天花板效应，因此有效信号是效率，而不是解决率差异：
+由于三种配置的解决率都是 100%，这套任务已经出现明显的天花板效应，不能用来比较模型能力。
+目前只能比较成本和运行步数：
 
-- **Haiku** 的成本约比 baseline 低 **3.5 倍**，代价是平均多 1.89 步。
-- **检索**平均减少 0.66 步，但每次成对尝试增加了 3,204 token 和 $0.0149。在当前数据集上，
-  减少的步骤仍不足以抵消注入上下文的成本。
+- Haiku 的平均成本约为 baseline 的 1/3.5，但平均多用 1.89 步。
+- 开启检索后平均少用 0.66 步，同时多消耗 3,204 token 和 $0.0149。就这套任务而言，
+  省下的步骤没有抵消额外上下文的成本。
 
-这些是每题三次的受控合成修复实验，不代表可以普遍修复任意仓库。完整数据见已提交的
+这里的任务都是人为构造的小型 Python 修复题，不能代表真实仓库上的普遍表现。原始数据和统计过程
+都保留在仓库中：
 [实验报告](eval/artifacts/multi_repo_v1/report.md)、[统计摘要](eval/artifacts/multi_repo_v1/summary.json)
 和全部 270 条[尝试记录](eval/artifacts/multi_repo_v1/attempts.jsonl)。
 
-## 工程化证据
+## 复现与 CI
 
-- **可安装 CLI：** `pyproject.toml` 提供 `luna` 命令，并区分核心依赖、开发依赖和可选检索依赖。
-- **自动质量闸门：** GitHub Actions 在 Python 3.9、3.11 和 3.12 上运行离线测试、编译检查、
-  benchmark 补丁验证和已发布证据审计。
-- **可检测篡改的结果：** `luna audit` 从原始 JSONL 重新生成每份已提交 summary 和报告，检查重复
-  attempt ID、密钥与本机路径，并验证真实案例注册表。
-- **明确的外部有效性边界：** 真实仓库案例必须记录固定提交、Issue、许可证、复现方式和状态，
-  且绝不混入受控 benchmark 的 pass@1。
+- `pyproject.toml` 定义了 `luna` 命令；体积较大的检索依赖默认不安装。
+- GitHub Actions 在 Python 3.9、3.11 和 3.12 上运行离线测试、任务补丁验证和产物检查。
+- `luna audit` 会从 JSONL 原始记录重新计算统计结果，同时检查重复 ID、本机路径和真实案例元数据。
+- 真实仓库案例单独记录，不和受控任务的解决率合并。
 
 ## 工作原理
 
-- **核心循环**（`agent/loop.py`）——ReAct 循环：模型读取任务、调用工具、观察结果并持续迭代。
-  `max_steps` 和单任务美元预算会限制运行；模型不再调用工具或触发护栏时停止。支持可选的流式输出
-  和 embedding 上下文检索。
-- **工具层**（`agent/tools.py`）——提供 `list_dir`、带行号的 `read_file`、字面量 `search`、
-  唯一匹配的 `edit_file`、`write_file` 和将 pytest 输出压缩为 PASS/FAIL 的 `run_tests`。
-  所有路径都通过 `agent/sandbox.py` 限定在工作目录内；错误始终返回字符串而不是向循环抛异常。
-- **LLM 接口层**（`agent/llm.py`）——对 Anthropic SDK 的薄封装，通过聚合网关调用模型，统一负责
-  重试、流式输出和 token/成本统计。`agent/config.py` 集中管理模型、预算、超时和价格表。
-- **任务集**（`tasks/`）——30 个修复任务，分布在三个仅依赖标准库的独立 Python fixture：
-  表达式求值器（12 题 / 51 个测试）、分层配置加载器（9 / 28）和依赖规划器（9 / 22）。任务包含
-  fixture、难度、标签和来源元数据。`luna validate` 会证明每个纯净测试集全绿、每份补丁
-  都能让声明目标变红、反向补丁能恢复基线，并且验证过程不会改变 fixture 源码。
-- **评分系统**（`eval/run_bench.py`）——Agent 停止后，评测器恢复原始测试，防止通过修改测试作弊，
-  然后独立运行完整 pytest。只有目标测试全部通过并且没有原本为绿的测试发生回归时，任务才算解决。
+- `agent/loop.py` 负责主循环。模型读取任务后调用工具，工具结果再作为下一轮输入。运行受
+  `max_steps` 和成本预算限制；模型停止调用工具或触发限制时结束。
+- `agent/tools.py` 提供目录浏览、文件读取、文本搜索、精确替换、文件写入和测试执行。
+  `agent/sandbox.py` 会把这些文件操作限制在工作目录内。
+- `agent/llm.py` 封装 Anthropic SDK，处理重试、流式响应和用量统计；模型、超时和价格配置集中在
+  `agent/config.py`。
+- `tasks/` 包含三个只依赖标准库的 Python fixture：表达式求值器（12题/51个测试）、配置加载器
+  （9题/28个测试）和依赖规划器（9题/22个测试）。`luna validate` 会检查原始 fixture 全绿、
+  `break.patch` 能让指定测试失败，并且反向应用补丁后可以恢复。
+- `eval/run_bench.py` 负责最终判定。它先恢复被 Agent 改动过的测试，再运行完整 pytest；
+  目标测试通过且没有新增失败，才记为 solved。
 
 ## 重复实验
 
-`experiment` 命令可以运行和恢复多次尝试，并将每个已结束的尝试立即保存为 JSONL。报告包含均值、
-样本标准差、中位数、95% Wilson 区间、按 fixture/难度的分组结果，以及相对于 baseline 的成对差异。
+`experiment` 用于重复运行任务。每次尝试结束后都会立即追加到 JSONL，因此进程中断后可以从已有记录
+继续。汇总结果包含均值、样本标准差、中位数、95% Wilson 区间，以及按 fixture 和难度的分组数据。
 
 ```bash
 luna validate
@@ -491,24 +471,20 @@ luna experiment --campaign multi_repo_v1 --attempts 3 \
 luna audit
 ```
 
-正式发布模式要求 Git 工作区干净，并在 `eval/artifacts/<campaign>/` 下写入不含密钥的 manifest、
-原始尝试、统计摘要和报告。临时实验仍写入被忽略的 `eval/results/`。
+加上 `--publish` 时，命令要求 Git 工作区保持干净，并把 manifest、原始记录、统计摘要和报告写到
+`eval/artifacts/<campaign>/`。普通试跑写入已被忽略的 `eval/results/`。
 
 ## 在真实仓库上运行
 
-`python cli.py run <repo>` 会让同一个 Agent 面向一个**存在失败测试的 Git 仓库**工作，
-将 fixture 任务集中的流程推广到真实代码（实现位于 `eval/run_repo.py`）：
+`luna run <repo>` 可以对已有失败测试的 Git 仓库运行同一个 Agent，相关代码在 `eval/run_repo.py`。
 
-- **失败测试就是预言机。** 工具首先运行测试套件，将当前失败的测试作为目标，修改源码后重新运行。
-  “已解决”表示原本失败的测试变绿，并且原本通过的测试没有变红。没有失败测试时，它不会主动寻找
-  无法通过测试证明的潜在缺陷。
-- **默认安全。** 要求工作区干净，在新的 `luna/fix-<ts>` 分支上工作，绝不自动提交或重置用户改动，
-  并打印最终 diff。它会拒绝非 Git 目录、仓库子目录以及正在 merge/rebase 的仓库，并在判定前恢复
-  Agent 修改过的测试文件。
-- **使用目标仓库的解释器。** 可以通过 `--python` 指定，或自动检测 `<repo>/.venv`，以便 pytest
-  能加载目标项目自己的依赖。
-- **默认使用 pytest。** pytest 模式提供逐测试判定和回归检测；也可以通过 `--test-cmd "…"`
-  使用其他测试命令，但此时只能根据退出码做粗粒度判断。
+运行前会检查仓库根目录、工作区状态以及是否存在未结束的 merge/rebase。默认要求工作区干净，
+并新建 `luna/fix-<ts>` 分支；程序不会自动 commit，也不会 reset 用户文件。Agent 结束后，评测代码会
+恢复它改动过的测试文件，再重新运行测试。
+
+默认使用 pytest，这样可以记录每个测试的状态并检查回归。其他测试框架可以通过 `--test-cmd` 调用，
+但这种模式只能根据进程退出码判断。Python 解释器可以用 `--python` 指定；如果仓库下存在 `.venv`，
+程序会优先使用其中的解释器。
 
 ```bash
 luna run ~/proj --target tests/test_x.py::test_y     # 缩小目标范围
@@ -517,26 +493,22 @@ luna run ~/proj --test-cmd "make test" --budget 2.0 --max-steps 60
 
 ### 真实仓库案例研究
 
-Luna 还在 Pallets 公开的 `itsdangerous`
-[#237](https://github.com/pallets/itsdangerous/issues/237) 上进行了测试，代码固定在上游修复前的提交。
-加入可追踪的回归测试后，基线为 421 passed / 16 failed。Luna 用 12 步同时修复了 `Signer` 和
-`Serializer`，估算成本为 $0.4187；独立全量复判结果为 **437 passed / 0 failed / 0 回归**。
-复现方法、来源、许可证、指标和生成的补丁保存在
-[`eval/real_cases/itsdangerous_237/`](eval/real_cases/itsdangerous_237/)。
+目前记录了四个开源项目案例。每个案例都固定在上游修复前的 commit，并保存测试补丁、依赖版本、
+Luna 生成的补丁和最终测试结果。
 
-另外三个公开修复在任何 Luna 调用之前就已完成选择和红绿复现。在明确的 `$1.50` 总预算下，
-Luna 以 `$0.966090` 的总成本解决了全部三个案例，没有删除或隐藏失败运行。
+Click、Packaging 和 cattrs 是在运行 Luna 之前选定并完成红绿复现的，三次运行都保留在结果中。
+三项合计成本为 `$0.966090`，低于预先设置的 `$1.50` 上限。
 
-| 案例 | 领域 | 修复前复判 | Luna 独立复判 | 步数 | 成本 |
+| 案例 | 问题 | 修复前 | 修复后 | 步数 | 成本 |
 |---|---|---:|---:|---:|---:|
+| itsdangerous #237 | `salt=None` 兼容性 | 421 passed / 16 failed | 437 passed / 0 failed | 12 | $0.418700 |
 | Click #3578 | CLI 帮助文本渲染 | 1655 passed / 2 failed | 1657 passed / 0 failed | 8 | $0.211245 |
 | Packaging #1345 | requirement/marker 解析 | 62353 passed / 3 failed | 62356 passed / 0 failed | 7 | $0.329845 |
 | cattrs #688 | 嵌套泛型结构化 | 883 passed / 2 failed | 885 passed / 0 failed | 13 | $0.425000 |
 
-机器可读的 [`eval/real_cases/index.json`](eval/real_cases/index.json) 注册表和
-[`eval/real_cases/`](eval/real_cases/) 目录保存了选择来源、纯测试复现补丁、固定依赖、Luna 生成补丁
-和准确测试范围。这是四个透明的案例研究，不计入受控 benchmark 的 pass@1，也不代表可以普遍
-修复任意仓库。
+具体资料见 [`eval/real_cases/`](eval/real_cases/) 和
+[`index.json`](eval/real_cases/index.json)。这四个案例只用于展示和分析具体运行过程，不与受控任务
+的解决率合并。样本量也不足以推断 Luna 在任意仓库上的成功率。
 
 ## 与 Luna 对话
 
@@ -544,22 +516,14 @@ Luna 以 `$0.966090` 的总成本解决了全部三个案例，没有删除或�
 python serve.py            # → http://127.0.0.1:8000
 ```
 
-只需要用自然语言告诉她：*“帮我修一下 bug，仓库路径是 /path/to/repo。”* 她会从句子中提取路径，
-调用完全相同的 `run_repo` 流程，并返回结果卡片，包括基线、修复数量、回归、分支、成本和 diff。
-如果消息中没有路径，她会以角色设定正常聊天，而不是返回错误。
+输入类似“修复 `/path/to/repo` 里的失败测试”，后端会提取路径并调用 `run_repo`。结果页显示测试基线、
+修复数量、回归、工作分支、成本和 diff。没有识别到路径时，请求会进入普通聊天分支。
 
-前端只使用标准库 `http.server`，并按职责拆分：
+`serve.py` 只负责 HTTP 和静态文件；路径解析、聊天回复及仓库运行逻辑放在 `web_backend.py`，前端文件在
+`web/`。界面使用标准库 `http.server`，没有额外 Web 框架。可将立绘放在 `assets/luna.png`、
+`.jpg` 或 `.webp`，否则使用页面内置的 SVG。
 
-- **传输层**——`serve.py`：HTTP 服务、路由和静态文件分发。
-- **逻辑层**——`web_backend.py`：`parse_message` 提取路径，`chat_reply` 使用低成本模型完成角色闲聊
-  并提供静态兜底，`run_fix` 调用 `run_repo`，`handle_run` 负责分流。函数输入输出都是普通字典，
-  因此可以脱离 HTTP 离线测试。
-- **展示层**——`web/`：`index.html`、`style.css` 和 `app.js`，以及内置的手绘 SVG 猫娘。
-  支持客户端时间问候、通过 `prefers-color-scheme` 切换的柔和/夜间主题，以及结果卡片。
-  可以将自己的图片放到 `assets/luna.png`（也支持 `.jpg`/`.webp`）；没有图片时使用内置 SVG。
-
-**仅限本地使用**——服务只监听 `127.0.0.1`，但会运行目标仓库的测试，而测试本质上是任意代码；
-因此只应将它用于你信任的仓库。
+服务只监听 `127.0.0.1`。不过它仍会执行目标仓库的测试代码，所以不要用于来源不明的仓库。
 
 ## 项目结构
 
@@ -599,31 +563,28 @@ assets/           可选的 luna.* 立绘；不存在时使用内置 SVG
 | `LUNA_TEST_CMD` | 真实仓库模式的默认测试命令（可选） |
 | `PORT` | 对话服务端口（可选，默认 `8000`） |
 
-密钥直接从环境变量读取，绝不会进入 `Config`、日志或实验产物。
+密钥由 SDK 直接读取，不保存在 `Config` 或实验产物中。
 
 ## 测试
 
 ```bash
-python -m pytest -q        # 全部离线运行，Agent 调用使用 monkeypatch 替换
-luna validate             # 证明每份 benchmark 补丁都满足预期红绿行为
-luna audit                # 重算已提交报告并验证真实案例来源
+python -m pytest -q        # 项目测试；模型调用已替换为 mock
+luna validate             # 检查任务集和 break.patch
+luna audit                # 重算实验汇总并检查真实案例元数据
 ```
 
-测试覆盖工具、路径限制、LLM 封装、Agent 循环、配置、多 fixture 验证、实验统计与恢复逻辑、
-真实案例产物完整性和真实仓库编排流程，不会访问模型网关。
+这些检查覆盖工具层、路径限制、LLM 封装、主循环、任务数据、实验恢复、统计汇总、真实案例文件和
+真实仓库运行流程。CI 不访问模型 API。
 
 ## 限制与非目标
 
-- **需要失败测试作为预言机。** 它负责将红测试修绿；当所有测试都通过时，不会主动搜索缺乏验证标准的 bug。
-- **只有 pytest 支持结构化判定。** 其他测试命令可以通过 `--test-cmd` 使用，但只能根据退出码判断，
-  无法提供逐测试明细或回归列表。
+- Luna 依赖失败测试提供明确目标；测试全部通过时，它不会主动搜索其他潜在问题。
+- 只有 pytest 支持逐测试结果和回归检查。`--test-cmd` 只能根据退出码判断。
 - 编辑操作使用精确字符串替换，不支持模糊匹配或语义补丁。
-- 真实仓库与对话模式的安全边界是 Git 干净树、新分支、diff 和本地监听，**不是容器**；
-  测试命令可以执行任意代码，因此只能用于可信仓库。
-- 成本和延迟取决于聚合网关。该网关在流式模式下不返回 output token，因此 `run` 和 `bench`
-  默认使用非流式请求，以获得准确成本。
-- LLM 存在采样随机性，因此运行结果无法做到逐 bit 复现，步数和成本可能发生变化。
-- Embedding 检索只针对英文语料（`bge-small-en`），并且在当前任务集上的收益有限，详见消融实验。
+- Git 检查和本地监听不能替代容器隔离，测试命令仍可以执行任意代码。
+- 当前网关在流式响应中不返回 output token，因此 `run` 和 `bench` 默认关闭流式输出以便统计成本。
+- 模型输出有随机性；同一任务重复运行时，步骤、token 和结果都可能变化。
+- 检索模型 `bge-small-en` 面向英文代码语料，而且在当前任务集上没有降低成本。
 
 ## 许可证
 
