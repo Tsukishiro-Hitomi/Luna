@@ -9,8 +9,8 @@
 > Drive it from the CLI, or chat with **Luna**, the catgirl assistant on the front.
 
 <!-- badges: keep to 3-4, all must be real & green -->
-![Python](https://img.shields.io/badge/python-3.9-blue)
-![tests](https://img.shields.io/badge/tests-121%20passing-brightgreen)
+![Python](https://img.shields.io/badge/python-3.9--3.12-blue)
+[![CI](https://github.com/Tsukishiro-Hitomi/Luna/actions/workflows/ci.yml/badge.svg)](https://github.com/Tsukishiro-Hitomi/Luna/actions/workflows/ci.yml)
 ![license](https://img.shields.io/badge/license-MIT-lightgrey)
 
 <!-- TODO(demo.gif): record 8–15s of one task going red → agent loop → green,
@@ -28,8 +28,8 @@ re-runs pytest and checks for regressions, so the solve-rate is observed, not cl
 
 Two ways in, one engine:
 
-- **CLI** (`cli.py`) — `solve` a benchmark task, `bench` the whole controlled set, or
-  `run` the agent on any real git repo with failing tests.
+- **CLI** (`cli.py`) — `solve` a benchmark task, `bench` the whole controlled set,
+  `audit` committed evidence, or `run` the agent on a real git repo with failing tests.
 - **Chat** (`serve.py` + `web/`) — a local web app where **Luna**, a cat-eared code
   assistant, takes a repo path in plain language, fixes the red tests, and replies with a
   result card. She'll also just chat back if you say hi.
@@ -56,7 +56,7 @@ Both funnel into the same agent loop and the same test-oracle scoring.
 
 ```mermaid
 flowchart TD
-    cli["cli.py<br/>solve / bench / run"]
+    cli["cli.py<br/>solve / bench / experiment / validate / audit / run"]
     web["serve.py + web/<br/>Luna chat UI"] --> backend["web_backend.py<br/>parse · route"]
     backend -->|has a repo path| repo
     backend -->|just chatting| chat["chat_reply<br/>(persona, cheap model)"]
@@ -75,28 +75,35 @@ flowchart TD
 ## Quickstart
 
 ```bash
-# Python 3.9 on macOS/Linux
-python3.9 -m venv .venv
+# Python 3.9–3.12 on macOS/Linux
+python3 -m venv .venv
 source .venv/bin/activate
-pip install -r requirements.txt
+pip install -e ".[dev]"
+
+# optional: install the embedding-retrieval dependency too
+# pip install -e ".[dev,retrieval]"
 
 # secrets: copy the template and fill in your gateway creds
 cp .env.example .env
 # edit .env → set ANTHROPIC_API_KEY and ANTHROPIC_BASE_URL
 
 # solve a single benchmark task (streams the loop to your terminal)
-python cli.py solve 001_mul_precedence
+luna solve 001_mul_precedence
 
 # run the whole benchmark → writes eval/scorecard.md
-python cli.py bench
+luna bench
 
 # fix YOUR git repo that has failing tests (new branch, prints the diff)
-python cli.py run /path/to/repo
-python cli.py run /path/to/repo --python /path/to/repo/.venv/bin/python
+luna run /path/to/repo
+luna run /path/to/repo --python /path/to/repo/.venv/bin/python
 
 # …or chat with Luna in the browser
 python serve.py            # → http://127.0.0.1:8000  (Ctrl-C to stop)
 ```
+
+`pip install -r requirements.txt` remains available as a compatibility path. Benchmark and
+web assets intentionally live in the source checkout, so editable installation is the
+recommended development setup.
 
 ## Results
 
@@ -125,6 +132,18 @@ repository repair. See the committed [report](eval/artifacts/multi_repo_v1/repor
 [summary](eval/artifacts/multi_repo_v1/summary.json), and all 270
 [attempt records](eval/artifacts/multi_repo_v1/attempts.jsonl).
 
+## Engineering evidence
+
+- **Installable CLI:** `pyproject.toml` exposes the `luna` command with separated core,
+  development, and optional retrieval dependencies.
+- **Automated quality gate:** GitHub Actions runs the offline suite on Python 3.9, 3.11, and
+  3.12, compiles the source, validates all benchmark patches, and audits published evidence.
+- **Tamper-evident results:** `luna audit` rebuilds every committed summary and report from
+  raw JSONL attempts, rejects duplicate attempt IDs, scans artifacts for secrets/local paths,
+  and validates the real-case registry.
+- **Explicit external-validity boundary:** real-repository results are indexed with a pinned
+  commit, issue, license, reproduction, and status, and are never mixed into controlled pass@1.
+
 ## How it works
 
 - **The loop** (`agent/loop.py`) — a ReAct cycle: the model sees the task, calls tools,
@@ -141,7 +160,7 @@ repository repair. See the committed [report](eval/artifacts/multi_repo_v1/repor
 - **The task set** (`tasks/`) — 30 repair tasks across three independent, standard-library
   Python fixtures: an expression evaluator (12 tasks / 51 tests), a layered configuration
   loader (9 / 28), and a dependency planner (9 / 22). Tasks carry fixture, difficulty, tag,
-  and provenance metadata. `python cli.py validate` proves each pristine suite is green,
+  and provenance metadata. `luna validate` proves each pristine suite is green,
   each patch turns its declared targets red, reverse-patching restores the baseline, and
   fixture source remains unchanged.
 - **Scoring** (`eval/run_bench.py`) — after the agent stops, the harness restores the
@@ -156,9 +175,10 @@ attempt in JSONL. Reports include means, sample standard deviations, medians, 95
 intervals, per-fixture/difficulty breakdowns, and paired deltas against baseline.
 
 ```bash
-python cli.py validate
-python cli.py experiment --campaign multi_repo_v1 --attempts 3 \
+luna validate
+luna experiment --campaign multi_repo_v1 --attempts 3 \
   --variants baseline,haiku,retrieval --cost-cap 40 --publish
+luna audit
 ```
 
 Official publish mode requires a clean Git tree and writes a secret-free manifest, raw
@@ -197,7 +217,10 @@ independent full-suite verdict was **437 passed / 0 failed / 0 regressions**. Re
 provenance, license, metrics, and the generated patch are stored in
 [`eval/real_cases/itsdangerous_237/`](eval/real_cases/itsdangerous_237/).
 
-This is reported as one case study, not included in controlled-benchmark pass@1.
+The machine-readable [`eval/real_cases/index.json`](eval/real_cases/index.json) registry pins
+the provenance and reproduction contract. This is reported as one case study, not included
+in controlled-benchmark pass@1. Adding more cases does not require paid model calls until the
+case reaches the separate solving stage.
 
 ## Chat with Luna
 
@@ -239,10 +262,11 @@ tasks/            30 repair tasks + task authoring guide
 eval/
   run_bench.py      the benchmark: run each task, judge, write scorecard.md
   experiment.py     resumable attempts, manifests, statistics, and reports
+  audit.py          recompute published evidence + validate the real-case registry
   run_repo.py       real-repo runner (git preflight → agent → restore tests → judge)
   real_cases/       pinned real-repository reproductions and Luna patches
-tests/            148 offline tests for the Agent, harness, campaigns, and case artifacts
-cli.py            solve / bench / run entrypoints
+tests/            offline tests for the Agent, CLI/Web boundaries, harness, and evidence
+cli.py            solve / bench / experiment / validate / audit / run entrypoints
 serve.py          Luna chat UI — HTTP server + routing + static dispatch (thin)
 web_backend.py    its logic: parse message → chat_reply / run_fix (no HTTP)
 web/              its frontend: index.html + style.css + app.js
@@ -266,7 +290,9 @@ Secrets are read straight from the environment and never enter `Config`, logs, o
 ## Testing
 
 ```bash
-python -m pytest -q        # 148 tests, all offline (agent runs are monkeypatched)
+python -m pytest -q        # all offline; agent runs are monkeypatched
+luna validate             # prove every benchmark patch has the intended red/green behavior
+luna audit                # recompute committed reports and validate real-case provenance
 ```
 
 The suite covers tools, path confinement, the LLM wrapper, loop, config, multi-fixture
@@ -302,8 +328,8 @@ MIT
 > 并持续迭代，直到测试全部通过。每次运行都由独立评测器打分，因此 **pass@1 是实际观测值，
 > 而不是模型的自我评价**。你既可以通过 CLI 使用它，也可以在前端与猫娘代码助手 Luna 对话。
 
-![Python](https://img.shields.io/badge/python-3.9-blue)
-![测试](https://img.shields.io/badge/tests-121%20passing-brightgreen)
+![Python](https://img.shields.io/badge/python-3.9--3.12-blue)
+[![CI](https://github.com/Tsukishiro-Hitomi/Luna/actions/workflows/ci.yml/badge.svg)](https://github.com/Tsukishiro-Hitomi/Luna/actions/workflows/ci.yml)
 ![许可证](https://img.shields.io/badge/license-MIT-lightgrey)
 
 <!-- TODO(demo.gif)：录制一个 8–15 秒的演示，展示单个任务从测试失败到 Agent 迭代、
@@ -321,7 +347,7 @@ Luna 是一个从零构建的编程 Agent：给它一个存在失败测试的仓
 两个入口，共用一个引擎：
 
 - **CLI**（`cli.py`）——可用 `solve` 解决单个基准任务，用 `bench` 运行完整受控任务集，
-  或用 `run` 在真实 Git 仓库中运行 Agent。
+  用 `audit` 审计已提交证据，或用 `run` 在真实 Git 仓库中运行 Agent。
 - **对话界面**（`serve.py` + `web/`）——本地 Web 应用。猫耳代码助手 Luna 可以从自然语言中
   获取仓库路径、修复失败测试，并返回结果卡片；如果只是向她问好，她也可以正常聊天。
 
@@ -343,7 +369,7 @@ Luna 是一个从零构建的编程 Agent：给它一个存在失败测试的仓
 
 ```mermaid
 flowchart TD
-    cli["cli.py<br/>solve / bench / run"]
+    cli["cli.py<br/>solve / bench / experiment / validate / audit / run"]
     web["serve.py + web/<br/>Luna 对话界面"] --> backend["web_backend.py<br/>解析 · 分流"]
     backend -->|包含仓库路径| repo
     backend -->|普通聊天| chat["chat_reply<br/>角色设定、低成本模型"]
@@ -362,28 +388,34 @@ flowchart TD
 ## 快速开始
 
 ```bash
-# macOS/Linux，Python 3.9
-python3.9 -m venv .venv
+# macOS/Linux，Python 3.9–3.12
+python3 -m venv .venv
 source .venv/bin/activate
-pip install -r requirements.txt
+pip install -e ".[dev]"
+
+# 可选：同时安装 embedding 检索依赖
+# pip install -e ".[dev,retrieval]"
 
 # 复制密钥模板，并填写聚合网关凭据
 cp .env.example .env
 # 编辑 .env，设置 ANTHROPIC_API_KEY 和 ANTHROPIC_BASE_URL
 
 # 解决单个基准任务，并在终端中流式显示 Agent 过程
-python cli.py solve 001_mul_precedence
+luna solve 001_mul_precedence
 
 # 运行完整基准测试，并写入 eval/scorecard.md
-python cli.py bench
+luna bench
 
 # 修复你自己的、存在失败测试的 Git 仓库（新建分支并打印 diff）
-python cli.py run /path/to/repo
-python cli.py run /path/to/repo --python /path/to/repo/.venv/bin/python
+luna run /path/to/repo
+luna run /path/to/repo --python /path/to/repo/.venv/bin/python
 
 # 或者在浏览器中与 Luna 对话
 python serve.py            # → http://127.0.0.1:8000（按 Ctrl-C 停止）
 ```
+
+仍可使用 `pip install -r requirements.txt` 作为兼容安装方式。基准数据和 Web 资源有意保留在
+源码仓库中，因此开发时推荐使用 editable install。
 
 ## 实验结果
 
@@ -409,6 +441,16 @@ python serve.py            # → http://127.0.0.1:8000（按 Ctrl-C 停止）
 [实验报告](eval/artifacts/multi_repo_v1/report.md)、[统计摘要](eval/artifacts/multi_repo_v1/summary.json)
 和全部 270 条[尝试记录](eval/artifacts/multi_repo_v1/attempts.jsonl)。
 
+## 工程化证据
+
+- **可安装 CLI：** `pyproject.toml` 提供 `luna` 命令，并区分核心依赖、开发依赖和可选检索依赖。
+- **自动质量闸门：** GitHub Actions 在 Python 3.9、3.11 和 3.12 上运行离线测试、编译检查、
+  benchmark 补丁验证和已发布证据审计。
+- **可检测篡改的结果：** `luna audit` 从原始 JSONL 重新生成每份已提交 summary 和报告，检查重复
+  attempt ID、密钥与本机路径，并验证真实案例注册表。
+- **明确的外部有效性边界：** 真实仓库案例必须记录固定提交、Issue、许可证、复现方式和状态，
+  且绝不混入受控 benchmark 的 pass@1。
+
 ## 工作原理
 
 - **核心循环**（`agent/loop.py`）——ReAct 循环：模型读取任务、调用工具、观察结果并持续迭代。
@@ -421,7 +463,7 @@ python serve.py            # → http://127.0.0.1:8000（按 Ctrl-C 停止）
   重试、流式输出和 token/成本统计。`agent/config.py` 集中管理模型、预算、超时和价格表。
 - **任务集**（`tasks/`）——30 个修复任务，分布在三个仅依赖标准库的独立 Python fixture：
   表达式求值器（12 题 / 51 个测试）、分层配置加载器（9 / 28）和依赖规划器（9 / 22）。任务包含
-  fixture、难度、标签和来源元数据。`python cli.py validate` 会证明每个纯净测试集全绿、每份补丁
+  fixture、难度、标签和来源元数据。`luna validate` 会证明每个纯净测试集全绿、每份补丁
   都能让声明目标变红、反向补丁能恢复基线，并且验证过程不会改变 fixture 源码。
 - **评分系统**（`eval/run_bench.py`）——Agent 停止后，评测器恢复原始测试，防止通过修改测试作弊，
   然后独立运行完整 pytest。只有目标测试全部通过并且没有原本为绿的测试发生回归时，任务才算解决。
@@ -432,9 +474,10 @@ python serve.py            # → http://127.0.0.1:8000（按 Ctrl-C 停止）
 样本标准差、中位数、95% Wilson 区间、按 fixture/难度的分组结果，以及相对于 baseline 的成对差异。
 
 ```bash
-python cli.py validate
-python cli.py experiment --campaign multi_repo_v1 --attempts 3 \
+luna validate
+luna experiment --campaign multi_repo_v1 --attempts 3 \
   --variants baseline,haiku,retrieval --cost-cap 40 --publish
+luna audit
 ```
 
 正式发布模式要求 Git 工作区干净，并在 `eval/artifacts/<campaign>/` 下写入不含密钥的 manifest、
@@ -470,7 +513,9 @@ Luna 还在 Pallets 公开的 `itsdangerous`
 复现方法、来源、许可证、指标和生成的补丁保存在
 [`eval/real_cases/itsdangerous_237/`](eval/real_cases/itsdangerous_237/)。
 
-这是一个单独案例，不计入受控 benchmark 的 pass@1。
+机器可读的 [`eval/real_cases/index.json`](eval/real_cases/index.json) 注册表固定了来源和复现约定。
+这是一个单独案例，不计入受控 benchmark 的 pass@1。新增案例在进入独立求解阶段之前不需要产生
+付费模型调用。
 
 ## 与 Luna 对话
 
@@ -510,10 +555,11 @@ tasks/            30 个修复任务 + 任务编写指南
 eval/
   run_bench.py      运行任务、独立判定并生成 scorecard.md
   experiment.py     可恢复尝试、manifest、统计和报告
+  audit.py          重算已发布证据并验证真实案例注册表
   run_repo.py       真实仓库流程：Git 预检 → Agent → 恢复测试 → 独立判定
   real_cases/       固定版本的真实仓库复现与 Luna 补丁
-tests/            Agent、harness、重复实验和案例产物的 148 个离线测试
-cli.py            solve / bench / run 命令入口
+tests/            Agent、CLI/Web 边界、harness 与证据产物的离线测试
+cli.py            solve / bench / experiment / validate / audit / run 命令入口
 serve.py          Luna 对话界面：HTTP 服务、路由与静态分发
 web_backend.py    解析消息并分流到 chat_reply / run_fix 的业务逻辑
 web/              index.html + style.css + app.js
@@ -537,7 +583,9 @@ assets/           可选的 luna.* 立绘；不存在时使用内置 SVG
 ## 测试
 
 ```bash
-python -m pytest -q        # 148 个测试，全部离线运行（Agent 调用使用 monkeypatch 替换）
+python -m pytest -q        # 全部离线运行，Agent 调用使用 monkeypatch 替换
+luna validate             # 证明每份 benchmark 补丁都满足预期红绿行为
+luna audit                # 重算已提交报告并验证真实案例来源
 ```
 
 测试覆盖工具、路径限制、LLM 封装、Agent 循环、配置、多 fixture 验证、实验统计与恢复逻辑、

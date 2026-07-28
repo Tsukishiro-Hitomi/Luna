@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "classification": "Real-repository case studies are qualitative external-validity evidence and are excluded from the controlled benchmark pass@1.",
+  "cases": [
+    {
+      "case_id": "itsdangerous_237",
+      "directory": "itsdangerous_237",
+      "status": "solved",
+      "upstream_url": "https://github.com/pallets/itsdangerous",
+      "issue_url": "https://github.com/pallets/itsdangerous/issues/237",
+      "license": "BSD-3-Clause",
+      "base_commit": "15a2e0d9b4bdaa38144c947a9aa04ffd49826700",
+      "reproduction_patch": "reproduction.patch",
+      "preparation_script": "prepare_case.py",
+      "test_command": "python -m pytest -q",
+      "result_file": "case.json",
+      "included_in_controlled_pass_at_1": false
+    }
+  ]
+}

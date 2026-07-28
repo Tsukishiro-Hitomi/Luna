@@ -91,8 +91,9 @@ def run_fix(repo, task, allow_dirty=False):
             "steps": r.steps, "cost": round(r.cost_usd, 4), "wall": round(r.wall_s, 1),
             "diff": (r.diff or "")[:6000], "untracked": r.untracked,
         }
-    except Exception as e:
-        return {"status": "error", "message": f"{type(e).__name__}: {e}"}
+    except Exception:
+        # Do not expose credentials, local paths, or dependency internals to the browser.
+        return {"status": "error", "message": "Repair failed; check the local server output."}
 
 
 # ---------------------------------------------------------------------------

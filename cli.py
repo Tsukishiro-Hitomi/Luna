@@ -31,6 +31,7 @@ from agent.config import Config
 from agent.sandbox import task_sandbox
 from agent.loop import run_agent
 from eval.experiment import run_experiment
+from eval.audit import audit_repository
 from eval.run_bench import discover_tasks, run_bench, render_scorecard, validate_task_dataset
 from eval.run_repo import run_repo
 
@@ -52,7 +53,8 @@ def build_parser() -> argparse.ArgumentParser:
         description="Luna — a test-driven autonomous coding agent.",
     )
     sub = parser.add_subparsers(
-        dest="command", required=True, metavar="{solve,bench,experiment,validate,run}"
+        dest="command", required=True,
+        metavar="{solve,bench,experiment,validate,audit,run}"
     )
 
     # —— solve ——（入参是任务目录名/id，与 discover_tasks 一致）
@@ -129,6 +131,14 @@ def build_parser() -> argparse.ArgumentParser:
     p_validate.add_argument(
         "--timeout", type=int, default=60, metavar="SEC",
         help="Per-pytest timeout during validation (default: %(default)s).",
+    )
+    p_audit = sub.add_parser(
+        "audit",
+        help="Verify published experiment artifacts and real-case provenance offline.",
+    )
+    p_audit.add_argument(
+        "--root", default=".", metavar="DIR",
+        help="Repository root (default: current directory).",
     )
     p_experiment = sub.add_parser(
         "experiment",
@@ -281,6 +291,21 @@ def cmd_validate(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_audit(args: argparse.Namespace) -> int:
+    """Recompute committed evidence and validate real-case metadata without model access."""
+    report = audit_repository(args.root)
+    if not report["valid"]:
+        print("EVIDENCE AUDIT FAILED", file=sys.stderr)
+        for error in report["errors"]:
+            print(f"  - {error}", file=sys.stderr)
+        return 1
+    print(
+        f"AUDITED: {report['artifact_campaigns']} experiment campaign(s), "
+        f"{report['real_cases']} real case(s)"
+    )
+    return 0
+
+
 def cmd_experiment(args: argparse.Namespace, config: Config) -> int:
     variants = [item.strip() for item in args.variants.split(",") if item.strip()]
     try:
@@ -380,6 +405,8 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         return cmd_bench(args, config)
     if args.command == "validate":
         return cmd_validate(args)
+    if args.command == "audit":
+        return cmd_audit(args)
     if args.command == "experiment":
         return cmd_experiment(args, config)
     if args.command == "run":

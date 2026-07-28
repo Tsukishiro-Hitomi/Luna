@@ -6,6 +6,7 @@ from pathlib import Path
 
 
 CASE_DIR = Path("eval/real_cases/itsdangerous_237")
+INDEX = Path("eval/real_cases/index.json")
 
 
 def _case():
@@ -67,3 +68,11 @@ def test_real_case_dependencies_are_version_pinned():
     requirements = (CASE_DIR / "requirements.txt").read_text(encoding="utf-8").splitlines()
     assert requirements
     assert all("==" in line for line in requirements if line.strip())
+
+
+def test_real_case_is_registered_in_index():
+    index = json.loads(INDEX.read_text(encoding="utf-8"))
+    entry = next(item for item in index["cases"] if item["case_id"] == "itsdangerous_237")
+    assert entry["status"] == "solved"
+    assert entry["included_in_controlled_pass_at_1"] is False
+    assert entry["base_commit"] == _case()["upstream"]["base_commit"]

@@ -19,6 +19,7 @@ import web_backend
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 WEB_DIR = os.path.join(HERE, "web")
+MAX_REQUEST_BYTES = 64 * 1024
 
 # 可直接取的静态文件白名单（顺带防目录穿越）：URL → web/ 下的文件名
 _STATIC = {
@@ -66,14 +67,23 @@ class Handler(BaseHTTPRequestHandler):
     def _read_json(self):
         try:
             n = int(self.headers.get("Content-Length", 0))
-            return json.loads(self.rfile.read(n) or b"{}")
-        except Exception:
-            self._send(400, "application/json",
-                       json.dumps({"status": "error", "message": "bad request"}).encode())
+            if n < 0:
+                raise ValueError("negative content length")
+            if n > MAX_REQUEST_BYTES:
+                self._send_json(
+                    {"status": "error", "message": "request too large"}, code=413
+                )
+                return None
+            value = json.loads(self.rfile.read(n) or b"{}")
+            if not isinstance(value, dict):
+                raise ValueError("request body must be an object")
+            return value
+        except (ValueError, json.JSONDecodeError):
+            self._send_json({"status": "error", "message": "bad request"}, code=400)
             return None
 
-    def _send_json(self, obj):
-        self._send(200, "application/json",
+    def _send_json(self, obj, code=200):
+        self._send(code, "application/json",
                    json.dumps(obj, ensure_ascii=False).encode("utf-8"))
 
     def do_POST(self):
