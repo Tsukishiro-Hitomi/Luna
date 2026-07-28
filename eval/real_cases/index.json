@@ -20,7 +20,7 @@
     {
       "case_id": "click_3578",
       "directory": "click_3578",
-      "status": "reproduced",
+      "status": "solved",
       "upstream_url": "https://github.com/pallets/click",
       "issue_url": "https://github.com/pallets/click/pull/3578",
       "license": "BSD-3-Clause",
@@ -35,7 +35,7 @@
     {
       "case_id": "packaging_1345",
       "directory": "packaging_1345",
-      "status": "reproduced",
+      "status": "solved",
       "upstream_url": "https://github.com/pypa/packaging",
       "issue_url": "https://github.com/pypa/packaging/pull/1345",
       "license": "Apache-2.0 OR BSD-2-Clause",
@@ -50,7 +50,7 @@
     {
       "case_id": "cattrs_688",
       "directory": "cattrs_688",
-      "status": "reproduced",
+      "status": "solved",
       "upstream_url": "https://github.com/python-attrs/cattrs",
       "issue_url": "https://github.com/python-attrs/cattrs/pull/688",
       "license": "MIT",

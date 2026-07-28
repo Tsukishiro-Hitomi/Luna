@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "case_id": "click_3578",
-  "classification": "reproduced real-repository case; not included in benchmark pass@1; Luna has not been run",
+  "classification": "independently judged real-repository case; not included in benchmark pass@1",
   "upstream": {
     "name": "pallets/click",
     "url": "https://github.com/pallets/click",
@@ -23,5 +23,21 @@
     "scope": "full upstream suite with stress tests deselected by upstream configuration",
     "post_verdict": {"passed": 1657, "failed": 0, "error": 0, "skipped": 25, "xfailed": 1, "deselected": 31000}
   },
-  "luna_run": {"status": "not_run"}
+  "luna_run": {
+    "date": "2026-07-28",
+    "model": "anthropic/claude-opus-4.8",
+    "status": "solved",
+    "target_tests": 2,
+    "fixed": 2,
+    "regressions": 0,
+    "steps": 8,
+    "input_tokens": 35959,
+    "output_tokens": 1258,
+    "estimated_cost_usd": 0.211245,
+    "wall_s": 38.7,
+    "stop_reason": "model_stop",
+    "agent_oracle": "focused reproduction command judged by exit code; post_verdict is an independent full-suite rerun",
+    "patch": "luna.patch",
+    "post_verdict": {"passed": 1657, "failed": 0, "error": 0, "skipped": 25, "xfailed": 1, "deselected": 31000}
+  }
 }

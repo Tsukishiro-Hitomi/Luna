@@ -163,6 +163,27 @@ def verify_real_case_index(real_cases_dir: str) -> List[str]:
                 luna_status = result.get("luna_run", {}).get("status")
                 if entry["status"] == "solved" and luna_status != "solved":
                     errors.append(f"{case_id}: solved index status needs a solved Luna run")
+                if entry["status"] == "solved":
+                    luna_run = result.get("luna_run", {})
+                    patch_name = str(luna_run.get("patch", ""))
+                    if not _safe_relative_path(patch_name) or not os.path.isfile(
+                        os.path.join(case_dir, patch_name)
+                    ):
+                        errors.append(f"{case_id}: solved case needs a local Luna patch")
+                    if luna_run.get("target_tests", 0) <= 0:
+                        errors.append(f"{case_id}: solved case needs target test counts")
+                    if luna_run.get("fixed") != luna_run.get("target_tests"):
+                        errors.append(f"{case_id}: solved case must fix every target")
+                    if luna_run.get("regressions") != 0:
+                        errors.append(f"{case_id}: solved case must report zero regressions")
+                    post = luna_run.get("post_verdict", {})
+                    if post.get("failed") != 0 or post.get("error") != 0:
+                        errors.append(f"{case_id}: solved Luna verdict must be green")
+                    for metric in ("steps", "input_tokens", "output_tokens", "wall_s"):
+                        if luna_run.get(metric, 0) <= 0:
+                            errors.append(f"{case_id}: solved case needs positive {metric}")
+                    if luna_run.get("estimated_cost_usd", 0) <= 0:
+                        errors.append(f"{case_id}: solved case needs positive estimated cost")
                 if entry["status"] == "reproduced":
                     verdict = result.get("upstream_verification", {}).get("post_verdict", {})
                     if verdict.get("failed") != 0 or verdict.get("error") != 0:

@@ -7,9 +7,9 @@ solved it.
 | case | project | public report/fix | status | verified baseline |
 |---|---|---|---|---:|
 | `itsdangerous_237` | Pallets itsdangerous | issue #237 | solved | 421 passed / 16 failed |
-| `click_3578` | Pallets Click | pull request #3578 | reproduced | 1655 passed / 2 failed |
-| `packaging_1345` | PyPA Packaging | pull request #1345 | reproduced | 62353 passed / 3 failed |
-| `cattrs_688` | python-attrs cattrs | pull request #688 | reproduced | 883 passed / 2 failed |
+| `click_3578` | Pallets Click | pull request #3578 | solved | 1655 passed / 2 failed |
+| `packaging_1345` | PyPA Packaging | pull request #1345 | solved | 62353 passed / 3 failed |
+| `cattrs_688` | python-attrs cattrs | pull request #688 | solved | 883 passed / 2 failed |
 
 ## Status lifecycle
 
@@ -20,8 +20,10 @@ solved it.
   recorded. Unsuccessful Luna runs must remain recorded rather than being silently removed.
 
 Each directory contains a machine-readable `case.json`, a test-only `reproduction.patch`, a
-networked preparation script, pinned test dependencies, and human reproduction instructions.
+networked preparation script, pinned test dependencies, Luna's generated patch, and human
+reproduction instructions. The three newly added cases were selected and reproduced before
+any Luna run; Luna then solved all three for `$0.9660` total. This is a transparent three-case
+sample, not a general solve-rate claim.
 The registry at [`index.json`](index.json) is checked by `luna audit` for unique IDs, pinned
 commits, provenance consistency, safe paths, explicit pass@1 separation, and status/result
 consistency.
-

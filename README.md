@@ -203,11 +203,11 @@ and fixes them to green — the fixture task set, generalized to real code (via 
   `--test-cmd "…"`, judged by exit code only.
 
 ```bash
-python cli.py run ~/proj --target tests/test_x.py::test_y     # narrow the goal
-python cli.py run ~/proj --test-cmd "make test" --budget 2.0 --max-steps 60
+luna run ~/proj --target tests/test_x.py::test_y     # narrow the goal
+luna run ~/proj --test-cmd "make test" --budget 2.0 --max-steps 60
 ```
 
-### Real-repository case study
+### Real-repository case studies
 
 Luna was also evaluated on the public Pallets `itsdangerous` issue
 [#237](https://github.com/pallets/itsdangerous/issues/237), pinned immediately before the
@@ -217,22 +217,21 @@ independent full-suite verdict was **437 passed / 0 failed / 0 regressions**. Re
 provenance, license, metrics, and the generated patch are stored in
 [`eval/real_cases/itsdangerous_237/`](eval/real_cases/itsdangerous_237/).
 
-The machine-readable [`eval/real_cases/index.json`](eval/real_cases/index.json) registry pins
-the provenance and reproduction contract. This is reported as one case study, not included
-in controlled-benchmark pass@1.
+Three additional public repairs were selected and reproduced before any Luna call. Under an
+explicit `$1.50` total cap, Luna solved all three for `$0.966090`; no unsuccessful run was
+discarded.
 
-Three additional public repairs have passed the offline reproduction gate but have **not**
-been run through Luna, so they are reported as reproduced candidates rather than successes:
+| case | domain | verified pre-fix verdict | independent Luna verdict | steps | cost |
+|---|---|---:|---:|---:|---:|
+| Click #3578 | CLI help rendering | 1655 passed / 2 failed | 1657 passed / 0 failed | 8 | $0.211245 |
+| Packaging #1345 | requirement/marker parsing | 62353 passed / 3 failed | 62356 passed / 0 failed | 7 | $0.329845 |
+| cattrs #688 | nested generic structuring | 883 passed / 2 failed | 885 passed / 0 failed | 13 | $0.425000 |
 
-| candidate | domain | verified pre-fix verdict | upstream-fix verdict | Luna status |
-|---|---|---:|---:|---|
-| Click #3578 | CLI help rendering | 1655 passed / 2 failed | 1657 passed / 0 failed | not run |
-| Packaging #1345 | requirement/marker parsing | 62353 passed / 3 failed | 62356 passed / 0 failed | not run |
-| cattrs #688 | nested generic structuring | 883 passed / 2 failed | 885 passed / 0 failed | not run |
-
-Their test-only patches, pinned dependencies, preparation scripts, and exact scopes are in
-[`eval/real_cases/`](eval/real_cases/). Paid solving remains a separate, explicitly approved
-stage, preventing case selection from being biased toward hidden successful runs.
+The machine-readable [`eval/real_cases/index.json`](eval/real_cases/index.json) registry and
+[`eval/real_cases/`](eval/real_cases/) directories preserve selection provenance, test-only
+reproduction patches, pinned dependencies, generated Luna patches, and exact test scopes.
+These are four transparent case studies—not controlled-benchmark pass@1 or a claim of general
+repository repair.
 
 ## Chat with Luna
 
@@ -512,11 +511,11 @@ luna audit
   使用其他测试命令，但此时只能根据退出码做粗粒度判断。
 
 ```bash
-python cli.py run ~/proj --target tests/test_x.py::test_y     # 缩小目标范围
-python cli.py run ~/proj --test-cmd "make test" --budget 2.0 --max-steps 60
+luna run ~/proj --target tests/test_x.py::test_y     # 缩小目标范围
+luna run ~/proj --test-cmd "make test" --budget 2.0 --max-steps 60
 ```
 
-### 真实仓库案例
+### 真实仓库案例研究
 
 Luna 还在 Pallets 公开的 `itsdangerous`
 [#237](https://github.com/pallets/itsdangerous/issues/237) 上进行了测试，代码固定在上游修复前的提交。
@@ -525,21 +524,19 @@ Luna 还在 Pallets 公开的 `itsdangerous`
 复现方法、来源、许可证、指标和生成的补丁保存在
 [`eval/real_cases/itsdangerous_237/`](eval/real_cases/itsdangerous_237/)。
 
-机器可读的 [`eval/real_cases/index.json`](eval/real_cases/index.json) 注册表固定了来源和复现约定。
-这是一个单独案例，不计入受控 benchmark 的 pass@1。
+另外三个公开修复在任何 Luna 调用之前就已完成选择和红绿复现。在明确的 `$1.50` 总预算下，
+Luna 以 `$0.966090` 的总成本解决了全部三个案例，没有删除或隐藏失败运行。
 
-另外三个公开修复已经通过离线复现闸门，但**尚未交给 Luna 求解**，因此只标记为已复现候选，
-而不是成功案例：
+| 案例 | 领域 | 修复前复判 | Luna 独立复判 | 步数 | 成本 |
+|---|---|---:|---:|---:|---:|
+| Click #3578 | CLI 帮助文本渲染 | 1655 passed / 2 failed | 1657 passed / 0 failed | 8 | $0.211245 |
+| Packaging #1345 | requirement/marker 解析 | 62353 passed / 3 failed | 62356 passed / 0 failed | 7 | $0.329845 |
+| cattrs #688 | 嵌套泛型结构化 | 883 passed / 2 failed | 885 passed / 0 failed | 13 | $0.425000 |
 
-| 候选案例 | 领域 | 修复前复判 | 上游修复复判 | Luna 状态 |
-|---|---|---:|---:|---|
-| Click #3578 | CLI 帮助文本渲染 | 1655 passed / 2 failed | 1657 passed / 0 failed | 未运行 |
-| Packaging #1345 | requirement/marker 解析 | 62353 passed / 3 failed | 62356 passed / 0 failed | 未运行 |
-| cattrs #688 | 嵌套泛型结构化 | 883 passed / 2 failed | 885 passed / 0 failed | 未运行 |
-
-它们的纯测试补丁、固定依赖、准备脚本和准确测试范围保存在
-[`eval/real_cases/`](eval/real_cases/) 中。付费求解仍是需要单独批准的下一阶段，从而避免先隐藏运行、
-再只挑成功案例展示的选择偏差。
+机器可读的 [`eval/real_cases/index.json`](eval/real_cases/index.json) 注册表和
+[`eval/real_cases/`](eval/real_cases/) 目录保存了选择来源、纯测试复现补丁、固定依赖、Luna 生成补丁
+和准确测试范围。这是四个透明的案例研究，不计入受控 benchmark 的 pass@1，也不代表可以普遍
+修复任意仓库。
 
 ## 与 Luna 对话
 

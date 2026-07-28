@@ -1,8 +1,7 @@
 # Reproduced case: Click pull request #3578
 
 This case pins Click immediately before its public fix for duplicated brackets in optional
-`Choice` and `DateTime` argument metavars. It is not part of controlled benchmark pass@1,
-and Luna has not been run on it yet.
+`Choice` and `DateTime` argument metavars. It is not part of controlled benchmark pass@1.
 
 ```bash
 python eval/real_cases/click_3578/prepare_case.py /tmp/click-3578
@@ -16,3 +15,8 @@ Observed baseline: `1655 passed, 2 failed, 25 skipped, 1 xfailed`. Checking out 
 published upstream source fix produces `1657 passed, 0 failed` under the same environment.
 See [`case.json`](case.json) for pinned provenance and the exact focused test command.
 
+## Observed Luna run
+
+Luna solved the case in 8 steps using 35,959 input and 1,258 output tokens, for an estimated
+`$0.211245`. The generated one-line [`luna.patch`](luna.patch) passed the full suite with
+`1657 passed, 0 failed` and no regressions.

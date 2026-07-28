@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "case_id": "cattrs_688",
-  "classification": "reproduced real-repository case; not included in benchmark pass@1; Luna has not been run",
+  "classification": "independently judged real-repository case; not included in benchmark pass@1",
   "upstream": {
     "name": "python-attrs/cattrs",
     "url": "https://github.com/python-attrs/cattrs",
@@ -23,5 +23,21 @@
     "scope": "core suite; optional preconfigured serializer adapter tests excluded",
     "post_verdict": {"passed": 885, "failed": 0, "error": 0, "skipped": 0, "xfailed": 15}
   },
-  "luna_run": {"status": "not_run"}
+  "luna_run": {
+    "date": "2026-07-28",
+    "model": "anthropic/claude-opus-4.8",
+    "status": "solved",
+    "target_tests": 2,
+    "fixed": 2,
+    "regressions": 0,
+    "steps": 13,
+    "input_tokens": 77050,
+    "output_tokens": 1590,
+    "estimated_cost_usd": 0.425,
+    "wall_s": 45.4,
+    "stop_reason": "model_stop",
+    "agent_oracle": "focused reproduction command judged by exit code; post_verdict is an independent core-suite rerun",
+    "patch": "luna.patch",
+    "post_verdict": {"passed": 885, "failed": 0, "error": 0, "skipped": 0, "xfailed": 15}
+  }
 }

@@ -1,0 +1,13 @@
+diff --git a/src/click/core.py b/src/click/core.py
+index d2db291..cd642b5 100644
+--- a/src/click/core.py
++++ b/src/click/core.py
+@@ -3573,7 +3573,7 @@ class Argument(Parameter):
+             var = self.name.upper()
+         if self.deprecated:
+             var += "!"
+-        if not self.required:
++        if not self.required and not (var.startswith("[") and var.endswith("]")):
+             var = f"[{var}]"
+         if self.nargs != 1:
+             var += "..."

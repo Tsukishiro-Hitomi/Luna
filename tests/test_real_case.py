@@ -78,19 +78,35 @@ def test_real_case_is_registered_in_index():
     assert entry["base_commit"] == _case()["upstream"]["base_commit"]
 
 
-def test_reproduced_cases_have_red_baselines_and_green_upstream_verdicts():
+def test_new_cases_have_red_baselines_and_green_upstream_verdicts():
     index = json.loads(INDEX.read_text(encoding="utf-8"))
-    reproduced = [entry for entry in index["cases"] if entry["status"] == "reproduced"]
-    assert {entry["case_id"] for entry in reproduced} == {
+    candidates = [
+        entry for entry in index["cases"]
+        if entry["case_id"] != "itsdangerous_237"
+    ]
+    assert {entry["case_id"] for entry in candidates} == {
         "click_3578", "packaging_1345", "cattrs_688",
     }
-    for entry in reproduced:
+    for entry in candidates:
         case_dir = INDEX.parent / entry["directory"]
         case = json.loads((case_dir / entry["result_file"]).read_text(encoding="utf-8"))
         assert case["reproduction"]["baseline"]["failed"] > 0
         assert case["upstream_verification"]["post_verdict"]["failed"] == 0
         assert case["upstream_verification"]["post_verdict"]["error"] == 0
-        assert case["luna_run"]["status"] == "not_run"
+        assert case["luna_run"]["status"] == "solved"
+
+
+def test_every_registered_case_has_a_complete_solved_run():
+    index = json.loads(INDEX.read_text(encoding="utf-8"))
+    assert all(entry["status"] == "solved" for entry in index["cases"])
+    for entry in index["cases"]:
+        case_dir = INDEX.parent / entry["directory"]
+        case = json.loads((case_dir / entry["result_file"]).read_text(encoding="utf-8"))
+        run = case["luna_run"]
+        assert run["fixed"] == run["target_tests"]
+        assert run["regressions"] == 0
+        assert run["post_verdict"]["failed"] == 0
+        assert (case_dir / run["patch"]).is_file()
 
 
 def test_every_registered_case_has_pinned_dependencies_and_prepare_constants():
