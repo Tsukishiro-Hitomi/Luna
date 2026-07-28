@@ -35,7 +35,7 @@ from eval.run_bench import discover_tasks, run_bench, render_scorecard, validate
 from eval.run_repo import run_repo
 
 
-# 任务集根目录默认值（discover_tasks 会跳过其中的 fixture/）。
+# 任务集根目录默认值（fixture 位于 tasks/fixtures/<id>/）。
 DEFAULT_TASKS_DIR = "tasks"
 # 记分卡默认落点（入库的展示产物，README 指向它）。
 DEFAULT_SCORECARD = "eval/scorecard.md"
@@ -69,7 +69,7 @@ def build_parser() -> argparse.ArgumentParser:
         "--tasks",
         default=DEFAULT_TASKS_DIR,
         metavar="DIR",
-        help="Task-set root containing fixture/ and NNN_*/ (default: %(default)s).",
+        help="Task-set root containing fixtures/ and NNN_*/ (default: %(default)s).",
     )
 
     # —— bench ——

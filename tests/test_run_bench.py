@@ -45,13 +45,13 @@ def _write_tiny_dataset(root, *, target="tests/test_value.py::test_value"):
     return tasks
 
 
-def test_discover_existing_tasks_uses_legacy_expression_fixture():
+def test_discover_existing_tasks_uses_uniform_expression_fixture():
     tasks = rb.discover_tasks("tasks", strict=True)
     expression_tasks = [task for task in tasks if task.fixture_id == "expression"]
     assert len(tasks) == 30
     assert len(expression_tasks) == 12
     assert all(
-        task.fixture_dir.endswith(os.path.join("tasks", "fixture"))
+        task.fixture_dir.endswith(os.path.join("tasks", "fixtures", "expression"))
         for task in expression_tasks
     )
 

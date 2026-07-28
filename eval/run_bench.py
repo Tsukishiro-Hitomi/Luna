@@ -55,12 +55,11 @@ class DatasetError(ValueError):
 # 任务发现与工作区准备
 # ─────────────────────────────────────────────────────────────────────────────
 
-def _fixture_dir(tasks_dir: str, fixture_id: str, explicit: bool) -> str:
+def _fixture_dir(tasks_dir: str, fixture_id: str) -> str:
     """Resolve a fixture ID without allowing metadata to escape ``tasks_dir``.
 
-    Legacy tasks omit ``fixture`` and continue to use ``tasks/fixture``. Explicit
-    fixture IDs live under ``tasks/fixtures/<id>``; ``expression`` also falls back to
-    the legacy location so the existing 12 tasks can be migrated incrementally.
+    Every fixture lives under ``tasks/fixtures/<id>`` and every task names its fixture
+    explicitly in metadata.
     """
     if not fixture_id or os.path.isabs(fixture_id) or fixture_id in (".", ".."):
         raise ValueError(f"invalid fixture id: {fixture_id!r}")
@@ -68,12 +67,7 @@ def _fixture_dir(tasks_dir: str, fixture_id: str, explicit: bool) -> str:
         raise ValueError(f"invalid fixture id: {fixture_id!r}")
 
     root = os.path.realpath(tasks_dir)
-    if not explicit:
-        candidate = os.path.join(root, "fixture")
-    else:
-        candidate = os.path.join(root, "fixtures", fixture_id)
-        if fixture_id == "expression" and not os.path.isdir(candidate):
-            candidate = os.path.join(root, "fixture")
+    candidate = os.path.join(root, "fixtures", fixture_id)
     candidate = os.path.realpath(candidate)
     if not (candidate == root or candidate.startswith(root + os.sep)):
         raise ValueError(f"fixture escapes task root: {fixture_id!r}")
@@ -90,13 +84,13 @@ def discover_tasks(tasks_dir: str, *, strict: bool = False) -> List[Task]:
     seen_ids = set()
     for name in sorted(os.listdir(tasks_dir)):
         d = os.path.join(tasks_dir, name)
-        if name in ("fixture", "fixtures") or not os.path.isdir(d) or not name[:1].isdigit():
+        if name == "fixtures" or not os.path.isdir(d) or not name[:1].isdigit():
             continue
         tj = os.path.join(d, "task.json")
         try:
             with open(tj, encoding="utf-8") as f:
                 meta = json.load(f)
-            for k in ("id", "title", "kind", "description", "target_tests"):
+            for k in ("id", "title", "kind", "description", "target_tests", "fixture"):
                 if k not in meta:
                     raise ValueError(f"缺字段 {k}")
             if meta["kind"] not in ("fix_bug", "implement_stub"):
@@ -109,10 +103,10 @@ def discover_tasks(tasks_dir: str, *, strict: bool = False) -> List[Task]:
                 raise ValueError("target_tests 为空")
             if not all(isinstance(t, str) and t.startswith("tests/") for t in meta["target_tests"]):
                 raise ValueError("target_tests must contain tests/... node IDs")
-            fixture_id = meta.get("fixture", "expression")
+            fixture_id = meta["fixture"]
             if not isinstance(fixture_id, str):
                 raise ValueError("fixture must be a string")
-            fixture_dir = _fixture_dir(tasks_dir, fixture_id, "fixture" in meta)
+            fixture_dir = _fixture_dir(tasks_dir, fixture_id)
             difficulty = meta.get("difficulty", "basic")
             if difficulty not in ("basic", "medium", "hard"):
                 raise ValueError(f"invalid difficulty: {difficulty!r}")
@@ -152,8 +146,7 @@ def discover_tasks(tasks_dir: str, *, strict: bool = False) -> List[Task]:
 def prepare_workspace(task: Task, dest_root: Optional[str] = None) -> str:
     """给一道题准备打好 break.patch 的隔离工作副本。
     """
-    fixture_dir = task.fixture_dir or os.path.join(os.path.dirname(task.dir), "fixture")
-    return make_workspace(fixture_dir, task.break_patch)
+    return make_workspace(task.fixture_dir, task.break_patch)
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -346,7 +339,7 @@ def run_one_task(task: Task, config: Config, baseline: Dict[str, str]) -> dict:
     最后无论成败都 cleanup 工作区。wall_s 只算 agent 主循环那段，不含准备副本和判定复跑，
     度量的是 agent 本身；成本直接读 result.total_cost_usd，不在这边重算。
     """
-    fixture_dir = task.fixture_dir or os.path.join(os.path.dirname(task.dir), "fixture")
+    fixture_dir = task.fixture_dir
     tr = {
         "task_id": task.id, "status": "ok", "solved": False,
         "steps": 0, "input_tokens": 0, "output_tokens": 0, "tokens": 0,

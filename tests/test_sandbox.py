@@ -24,7 +24,7 @@ from agent.sandbox import (
 )
 
 FIXTURE_DIR = os.path.join(
-    os.path.dirname(os.path.abspath(__file__)), "..", "tasks", "fixture"
+    os.path.dirname(os.path.abspath(__file__)), "..", "tasks", "fixtures", "expression"
 )
 
 

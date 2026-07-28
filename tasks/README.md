@@ -9,13 +9,12 @@ Synthetic tasks are intentionally kept separate from the real-repository case st
 
 | fixture | domain | pristine tests | repair tasks |
 |---|---|---:|---:|
-| `expression` (`fixture/`) | tokenizer, parser, evaluator | 51 | 12 |
+| `expression` | tokenizer, parser, evaluator | 51 | 12 |
 | `config_loader` | nested merge, interpolation, includes, schema validation | 28 | 9 |
 | `dependency_planner` | parsing, DAG ordering, planning, critical path | 22 | 9 |
 | **total** | 3 independent projects | **101** | **30** |
 
-The two newer fixtures live in `fixtures/<fixture_id>/`. The original expression fixture
-keeps its legacy `fixture/` path for backward compatibility.
+All fixtures use the same `fixtures/<fixture_id>/` layout.
 
 ## Task contract
 
@@ -43,9 +42,9 @@ Example metadata:
 }
 ```
 
-Required fields are `id`, `title`, `kind`, `description`, and `target_tests`. New tasks
-must also declare `fixture`, `difficulty`, `tags`, and `source`. Legacy tasks without
-these fields default to the expression fixture, basic difficulty, and synthetic source.
+Required fields are `id`, `title`, `kind`, `description`, `target_tests`, and `fixture`.
+New tasks should also declare `difficulty`, `tags`, and `source`; omitted optional metadata
+defaults to basic difficulty and synthetic source.
 
 Allowed values:
 
@@ -60,7 +59,7 @@ broken line or revealing the repair. Titles and tags are for humans and reports.
 ## Patch contract
 
 `break.patch` is generated relative to the selected fixture root. Paths therefore look
-like `a/parser.py`, not `a/tasks/fixture/parser.py`. The harness applies patches with:
+like `a/parser.py`, not `a/tasks/fixtures/expression/parser.py`. The harness applies patches with:
 
 ```bash
 git apply -p1 /absolute/path/to/break.patch

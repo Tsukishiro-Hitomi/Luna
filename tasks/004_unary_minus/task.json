@@ -7,5 +7,6 @@
     "tests/test_parser.py::test_unary_minus",
     "tests/test_parser.py::test_unary_minus_after_op",
     "tests/test_parser.py::test_double_unary_minus"
-  ]
+  ],
+  "fixture": "expression"
 }

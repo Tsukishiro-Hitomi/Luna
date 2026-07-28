@@ -7,5 +7,6 @@
     "tests/test_evaluator.py::test_eval_division_is_float",
     "tests/test_evaluator.py::test_eval_division_fractional",
     "tests/test_evaluator.py::test_eval_division_by_zero_raises"
-  ]
+  ],
+  "fixture": "expression"
 }

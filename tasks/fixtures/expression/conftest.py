@@ -1,4 +1,4 @@
-"""把本目录（tasks/fixture/）加入 sys.path，让 tests/ 里的裸 import 解析成功。
+"""把本目录（tasks/fixtures/expression/）加入 sys.path，让 tests/ 里的裸 import 解析成功。
 
 DESIGN §4.1：fixture 是被操作的目标代码（扁平模块，非 package，无 __init__.py），
 测试用 `import tokenizer` / `import parser` / `import evaluator` / `import errors`

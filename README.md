@@ -234,9 +234,8 @@ agent/            the agent itself
   llm.py            Anthropic-via-gateway wrapper + token/cost accounting
   config.py         single knob panel (model, budgets, price table) + cost_of
   profile.py        remembers your name for the CLI greeting
-tasks/            30 repair tasks + 3 pristine fixtures
-  fixture/          legacy expression evaluator fixture
-  fixtures/         config_loader + dependency_planner fixtures
+tasks/            30 repair tasks + task authoring guide
+  fixtures/         expression + config_loader + dependency_planner
 eval/
   run_bench.py      the benchmark: run each task, judge, write scorecard.md
   experiment.py     resumable attempts, manifests, statistics, and reports
@@ -506,9 +505,8 @@ agent/            Agent 核心实现
   llm.py            Anthropic 聚合网关封装与 token/成本统计
   config.py         模型、预算、价格表和 cost_of 的集中配置
   profile.py        记录用户名，用于 CLI 问候
-tasks/            30 个修复任务 + 3 个纯净 fixture
-  fixture/          兼容旧结构的表达式求值器 fixture
-  fixtures/         config_loader + dependency_planner fixture
+tasks/            30 个修复任务 + 任务编写指南
+  fixtures/         expression + config_loader + dependency_planner
 eval/
   run_bench.py      运行任务、独立判定并生成 scorecard.md
   experiment.py     可恢复尝试、manifest、统计和报告
