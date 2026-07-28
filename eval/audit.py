@@ -92,8 +92,8 @@ def verify_real_case_index(real_cases_dir: str) -> List[str]:
 
     required_fields = (
         "case_id", "directory", "status", "upstream_url", "issue_url", "license",
-        "base_commit", "reproduction_patch", "preparation_script", "test_command",
-        "result_file", "included_in_controlled_pass_at_1",
+        "base_commit", "upstream_fix_commit", "reproduction_patch", "preparation_script",
+        "test_command", "result_file", "included_in_controlled_pass_at_1",
     )
     for entry in cases:
         if not isinstance(entry, dict):
@@ -112,6 +112,10 @@ def verify_real_case_index(real_cases_dir: str) -> List[str]:
             errors.append(f"{case_id}: real cases must be excluded from controlled pass@1")
         if not _COMMIT_RE.fullmatch(str(entry["base_commit"])):
             errors.append(f"{case_id}: base_commit must be a pinned 40-character SHA")
+        if not _COMMIT_RE.fullmatch(str(entry["upstream_fix_commit"])):
+            errors.append(
+                f"{case_id}: upstream_fix_commit must be a pinned 40-character SHA"
+            )
         for field in ("upstream_url", "issue_url"):
             if not str(entry[field]).startswith("https://"):
                 errors.append(f"{case_id}: {field} must be an HTTPS URL")
@@ -134,17 +138,37 @@ def verify_real_case_index(real_cases_dir: str) -> List[str]:
             try:
                 result = _read_json(result_path)
                 upstream = result["upstream"]
+                reproduction = result["reproduction"]
                 if result.get("case_id") != case_id:
                     errors.append(f"{case_id}: result case_id does not match index")
+                if result.get("schema_version") != 1:
+                    errors.append(f"{case_id}: result must use schema_version 1")
+                if "not included in benchmark pass@1" not in result.get("classification", ""):
+                    errors.append(f"{case_id}: result must state pass@1 exclusion")
                 mappings = {
                     "upstream_url": upstream.get("url"),
                     "issue_url": upstream.get("issue_url"),
                     "license": upstream.get("license"),
                     "base_commit": upstream.get("base_commit"),
+                    "upstream_fix_commit": upstream.get("upstream_fix_commit"),
+                    "reproduction_patch": reproduction.get("patch"),
+                    "test_command": reproduction.get("test_command"),
                 }
                 for field, value in mappings.items():
                     if entry[field] != value:
                         errors.append(f"{case_id}: {field} differs between index and result")
+                baseline = reproduction.get("baseline", {})
+                if entry["status"] in {"reproduced", "solved"} and not baseline.get("failed"):
+                    errors.append(f"{case_id}: reproduced cases need a failing baseline")
+                luna_status = result.get("luna_run", {}).get("status")
+                if entry["status"] == "solved" and luna_status != "solved":
+                    errors.append(f"{case_id}: solved index status needs a solved Luna run")
+                if entry["status"] == "reproduced":
+                    verdict = result.get("upstream_verification", {}).get("post_verdict", {})
+                    if verdict.get("failed") != 0 or verdict.get("error") != 0:
+                        errors.append(f"{case_id}: upstream verification must be green")
+                    if luna_status != "not_run":
+                        errors.append(f"{case_id}: reproduced status requires Luna status not_run")
             except (OSError, ValueError, KeyError, TypeError) as exc:
                 errors.append(f"{case_id}: invalid result file: {exc}")
     return errors

@@ -219,8 +219,20 @@ provenance, license, metrics, and the generated patch are stored in
 
 The machine-readable [`eval/real_cases/index.json`](eval/real_cases/index.json) registry pins
 the provenance and reproduction contract. This is reported as one case study, not included
-in controlled-benchmark pass@1. Adding more cases does not require paid model calls until the
-case reaches the separate solving stage.
+in controlled-benchmark pass@1.
+
+Three additional public repairs have passed the offline reproduction gate but have **not**
+been run through Luna, so they are reported as reproduced candidates rather than successes:
+
+| candidate | domain | verified pre-fix verdict | upstream-fix verdict | Luna status |
+|---|---|---:|---:|---|
+| Click #3578 | CLI help rendering | 1655 passed / 2 failed | 1657 passed / 0 failed | not run |
+| Packaging #1345 | requirement/marker parsing | 62353 passed / 3 failed | 62356 passed / 0 failed | not run |
+| cattrs #688 | nested generic structuring | 883 passed / 2 failed | 885 passed / 0 failed | not run |
+
+Their test-only patches, pinned dependencies, preparation scripts, and exact scopes are in
+[`eval/real_cases/`](eval/real_cases/). Paid solving remains a separate, explicitly approved
+stage, preventing case selection from being biased toward hidden successful runs.
 
 ## Chat with Luna
 
@@ -514,8 +526,20 @@ Luna 还在 Pallets 公开的 `itsdangerous`
 [`eval/real_cases/itsdangerous_237/`](eval/real_cases/itsdangerous_237/)。
 
 机器可读的 [`eval/real_cases/index.json`](eval/real_cases/index.json) 注册表固定了来源和复现约定。
-这是一个单独案例，不计入受控 benchmark 的 pass@1。新增案例在进入独立求解阶段之前不需要产生
-付费模型调用。
+这是一个单独案例，不计入受控 benchmark 的 pass@1。
+
+另外三个公开修复已经通过离线复现闸门，但**尚未交给 Luna 求解**，因此只标记为已复现候选，
+而不是成功案例：
+
+| 候选案例 | 领域 | 修复前复判 | 上游修复复判 | Luna 状态 |
+|---|---|---:|---:|---|
+| Click #3578 | CLI 帮助文本渲染 | 1655 passed / 2 failed | 1657 passed / 0 failed | 未运行 |
+| Packaging #1345 | requirement/marker 解析 | 62353 passed / 3 failed | 62356 passed / 0 failed | 未运行 |
+| cattrs #688 | 嵌套泛型结构化 | 883 passed / 2 failed | 885 passed / 0 failed | 未运行 |
+
+它们的纯测试补丁、固定依赖、准备脚本和准确测试范围保存在
+[`eval/real_cases/`](eval/real_cases/) 中。付费求解仍是需要单独批准的下一阶段，从而避免先隐藏运行、
+再只挑成功案例展示的选择偏差。
 
 ## 与 Luna 对话
 

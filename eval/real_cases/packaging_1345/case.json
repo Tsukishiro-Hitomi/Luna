@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "case_id": "packaging_1345",
+  "classification": "reproduced real-repository case; not included in benchmark pass@1; Luna has not been run",
+  "upstream": {
+    "name": "pypa/packaging",
+    "url": "https://github.com/pypa/packaging",
+    "license": "Apache-2.0 OR BSD-2-Clause",
+    "license_url": "https://github.com/pypa/packaging/blob/0bfc3cea4f9fe1b1b0c80ce06f02bd2433500c81/LICENSE",
+    "issue_url": "https://github.com/pypa/packaging/pull/1345",
+    "base_commit": "0bfc3cea4f9fe1b1b0c80ce06f02bd2433500c81",
+    "upstream_fix_commit": "189a76d54d64899adbca907c2a3efa5b6befdb28"
+  },
+  "reproduction": {
+    "patch": "reproduction.patch",
+    "test_command": "PYTHONPATH=src python -m pytest -q tests/test_markers.py::TestMarker::test_parses_invalid_trailing_line_break tests/test_requirements.py::TestRequirementParsing::test_error_when_suffixed_with_line_break",
+    "baseline": {"passed": 62353, "failed": 3, "error": 0, "skipped": 1, "deselected": 427},
+    "failure": "The regex end anchor accepts a final newline, so invalid marker and requirement strings are silently accepted"
+  },
+  "upstream_verification": {
+    "date": "2026-07-28",
+    "python": "3.12.13",
+    "scope": "full upstream suite with property tests deselected by upstream configuration",
+    "post_verdict": {"passed": 62356, "failed": 0, "error": 0, "skipped": 1, "deselected": 427}
+  },
+  "luna_run": {"status": "not_run"}
+}

@@ -76,3 +76,45 @@ def test_real_case_is_registered_in_index():
     assert entry["status"] == "solved"
     assert entry["included_in_controlled_pass_at_1"] is False
     assert entry["base_commit"] == _case()["upstream"]["base_commit"]
+
+
+def test_reproduced_cases_have_red_baselines_and_green_upstream_verdicts():
+    index = json.loads(INDEX.read_text(encoding="utf-8"))
+    reproduced = [entry for entry in index["cases"] if entry["status"] == "reproduced"]
+    assert {entry["case_id"] for entry in reproduced} == {
+        "click_3578", "packaging_1345", "cattrs_688",
+    }
+    for entry in reproduced:
+        case_dir = INDEX.parent / entry["directory"]
+        case = json.loads((case_dir / entry["result_file"]).read_text(encoding="utf-8"))
+        assert case["reproduction"]["baseline"]["failed"] > 0
+        assert case["upstream_verification"]["post_verdict"]["failed"] == 0
+        assert case["upstream_verification"]["post_verdict"]["error"] == 0
+        assert case["luna_run"]["status"] == "not_run"
+
+
+def test_every_registered_case_has_pinned_dependencies_and_prepare_constants():
+    index = json.loads(INDEX.read_text(encoding="utf-8"))
+    for entry in index["cases"]:
+        case_dir = INDEX.parent / entry["directory"]
+        requirements = (case_dir / "requirements.txt").read_text(encoding="utf-8").splitlines()
+        assert requirements
+        assert all("==" in line for line in requirements if line.strip())
+        spec = importlib.util.spec_from_file_location(
+            f"prepare_{entry['case_id']}", case_dir / entry["preparation_script"]
+        )
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        assert module.UPSTREAM.rstrip(".git") == entry["upstream_url"].rstrip(".git")
+        assert module.BASE_COMMIT == entry["base_commit"]
+
+
+def test_every_registered_reproduction_patch_is_secret_and_machine_path_free():
+    index = json.loads(INDEX.read_text(encoding="utf-8"))
+    for entry in index["cases"]:
+        patch = (
+            INDEX.parent / entry["directory"] / entry["reproduction_patch"]
+        ).read_text(encoding="utf-8")
+        assert "/Users/" not in patch
+        assert "ANTHROPIC_API_KEY" not in patch
+        assert "sk-ant-" not in patch

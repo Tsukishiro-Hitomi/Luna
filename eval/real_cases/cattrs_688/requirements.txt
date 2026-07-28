@@ -1,0 +1,6 @@
+attrs==25.4.0
+hypothesis==6.135.26
+immutables==0.21
+pytest==8.4.2
+pytest-benchmark==5.1.0
+typing-extensions==4.14.0
