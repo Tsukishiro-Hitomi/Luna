@@ -32,7 +32,13 @@ from agent.sandbox import task_sandbox
 from agent.loop import run_agent
 from eval.experiment import run_experiment
 from eval.audit import audit_repository
-from eval.run_bench import discover_tasks, run_bench, render_scorecard, validate_task_dataset
+from eval.run_bench import (
+    discover_tasks,
+    render_scorecard,
+    run_bench,
+    run_pytest,
+    validate_task_dataset,
+)
 from eval.run_repo import run_repo
 
 
@@ -72,6 +78,19 @@ def build_parser() -> argparse.ArgumentParser:
         default=DEFAULT_TASKS_DIR,
         metavar="DIR",
         help="Task-set root containing fixtures/ and NNN_*/ (default: %(default)s).",
+    )
+    p_solve.add_argument("--model", metavar="ID", help="Override the model for this run.")
+    p_solve.add_argument(
+        "--budget", type=float, metavar="USD",
+        help="Override the run cost limit in USD.",
+    )
+    p_solve.add_argument(
+        "--max-steps", type=int, metavar="N",
+        help="Override the maximum number of agent steps.",
+    )
+    p_solve.add_argument(
+        "--timeout", type=int, metavar="SEC",
+        help="Override the test timeout.",
     )
 
     # —— bench ——
@@ -209,9 +228,20 @@ def cmd_solve(args: argparse.Namespace, config: Config) -> int:
         print(f"错误：找不到任务 {args.task_id}（在 {args.tasks}/ 下）", file=sys.stderr)
         return 1
 
+    if args.model:
+        config.model = args.model
+    if args.budget is not None:
+        config.cost_budget_usd = args.budget
+    if args.max_steps is not None:
+        config.max_steps = args.max_steps
+    if args.timeout is not None:
+        config.run_tests_timeout_s = args.timeout
+        config.judge_timeout_s = args.timeout
     config.stream = True  # V7：solve 开流式，模型文本边生成边显示
     print(f"▶ solve {task.id} · {task.title}\n")
     with task_sandbox(task.fixture_dir, task.break_patch) as workdir:
+        before = run_pytest(workdir, config.judge_timeout_s)
+        print(f"[RED]   {_format_test_summary(before)}\n")
         result = run_agent(
             workdir, task.description, config,
             on_text=lambda t: print(t, end="", flush=True),  # 实时打印模型文本
@@ -220,6 +250,9 @@ def cmd_solve(args: argparse.Namespace, config: Config) -> int:
         for s in result.steps:
             names = "、".join(tc.name for tc in s.tool_calls) or "（收尾）"
             print(f"  #{s.index}: {names}")
+        after = run_pytest(workdir, config.judge_timeout_s)
+        label = "GREEN" if after and all(v in ("passed", "skipped") for v in after.values()) else "RED"
+        print(f"\n[{label}] {_format_test_summary(after)}")
 
     print(f"\nstop_reason={result.stop_reason}  steps={result.num_steps}  "
           f"tokens={result.total_input_tokens}/{result.total_output_tokens}  "
@@ -229,6 +262,14 @@ def cmd_solve(args: argparse.Namespace, config: Config) -> int:
     if result.final_text.strip():
         print("summary:", result.final_text.strip())
     return 0
+
+
+def _format_test_summary(outcomes: dict) -> str:
+    counts = {name: 0 for name in ("passed", "failed", "error", "skipped")}
+    for outcome in outcomes.values():
+        if outcome in counts:
+            counts[outcome] += 1
+    return " / ".join(f"{counts[name]} {name}" for name in counts)
 
 
 def cmd_bench(args: argparse.Namespace, config: Config) -> int:

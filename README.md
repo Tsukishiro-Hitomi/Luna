@@ -12,10 +12,7 @@
 [![CI](https://github.com/Tsukishiro-Hitomi/Luna/actions/workflows/ci.yml/badge.svg)](https://github.com/Tsukishiro-Hitomi/Luna/actions/workflows/ci.yml)
 ![license](https://img.shields.io/badge/license-MIT-lightgrey)
 
-<!-- TODO(demo.gif): record 8–15s of one task going red → agent loop → green,
-     save to docs/demo.gif, then uncomment the line below.
-![Luna solving a task](docs/demo.gif)
--->
+![Luna turns a failing test suite green](docs/demo.gif)
 
 ## What it is
 
@@ -338,10 +335,7 @@ MIT
 [![CI](https://github.com/Tsukishiro-Hitomi/Luna/actions/workflows/ci.yml/badge.svg)](https://github.com/Tsukishiro-Hitomi/Luna/actions/workflows/ci.yml)
 ![许可证](https://img.shields.io/badge/license-MIT-lightgrey)
 
-<!-- TODO(demo.gif)：录制一个 8–15 秒的演示，展示单个任务从测试失败到 Agent 迭代、
-     再到测试通过的过程，保存为 docs/demo.gif，然后取消下面一行的注释。
-![Luna 修复任务](docs/demo.gif)
--->
+![Luna 将失败测试修复为通过](docs/demo.gif)
 
 ## 项目内容
 
