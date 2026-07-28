@@ -232,6 +232,8 @@ repository repair.
 python serve.py            # → http://127.0.0.1:8000
 ```
 
+![Luna web result card](docs/web-result.png)
+
 Just tell her, in plain language: *"Fix the bug in the repo at /path/to/repo."* She pulls
 the path out of the sentence, runs the exact same `run_repo` pipeline as the CLI, and replies
 with a result card (baseline → fixed / regressions → branch → cost → diff). No path in your
@@ -327,7 +329,7 @@ MIT
 
 # 中文说明
 
-> Luna 是我为了理解 coding agent 工作机制而写的一个小型项目。它会读取仓库、修改源码、
+> Luna 是我根据 coding agent 工作机制而写的一个小型项目。它会读取仓库、修改源码、
 > 运行测试，再根据失败信息继续调整。Agent 不负责给自己判分；运行结束后，评测脚本会
 > 恢复原始测试并检查回归。项目包含 CLI、本地聊天界面、受控任务集和真实开源项目案例。
 
@@ -509,6 +511,8 @@ Click、Packaging 和 cattrs 是在运行 Luna 之前选定并完成红绿复现
 ```bash
 python serve.py            # → http://127.0.0.1:8000
 ```
+
+![Luna Web 修复结果页](docs/web-result.png)
 
 输入类似“修复 `/path/to/repo` 里的失败测试”，后端会提取路径并调用 `run_repo`。结果页显示测试基线、
 修复数量、回归、工作分支、成本和 diff。没有识别到路径时，请求会进入普通聊天分支。
