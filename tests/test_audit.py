@@ -4,7 +4,12 @@ import json
 import shutil
 from pathlib import Path
 
-from eval.audit import audit_repository, verify_experiment_artifact, verify_real_case_index
+from eval.audit import (
+    _equivalent,
+    audit_repository,
+    verify_experiment_artifact,
+    verify_real_case_index,
+)
 
 
 def test_committed_evidence_recomputes_exactly():
@@ -12,6 +17,15 @@ def test_committed_evidence_recomputes_exactly():
     assert report["valid"], report["errors"]
     assert report["artifact_campaigns"] >= 1
     assert report["real_cases"] >= 1
+
+
+def test_evidence_comparison_allows_only_float_roundoff():
+    original = {"count": 3, "metrics": [28.49147699999999, 17079.545142172024]}
+    cross_runtime = {"count": 3, "metrics": [28.491477, 17079.545142172028]}
+    assert _equivalent(original, cross_runtime)
+    assert not _equivalent(original, {"count": 4, "metrics": original["metrics"]})
+    assert not _equivalent(original, {"count": 3, "metrics": [28.49, 17079.5]})
+    assert not _equivalent(original, {"count": 3, "metrics": list(reversed(original["metrics"]))})
 
 
 def test_tampered_experiment_summary_is_rejected(tmp_path):

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import math
 import os
 import re
 from typing import List
@@ -17,6 +18,25 @@ _SENSITIVE_PATTERNS = (
     ("Anthropic-style secret", re.compile(r"sk-ant-[A-Za-z0-9_-]{12,}")),
 )
 _TEXT_SUFFIXES = {".json", ".jsonl", ".md", ".patch", ".py", ".txt"}
+
+
+def _equivalent(left, right) -> bool:
+    """Compare JSON values strictly except for cross-runtime float roundoff."""
+    if isinstance(left, bool) or isinstance(right, bool):
+        return left is right
+    if isinstance(left, (int, float)) and isinstance(right, (int, float)):
+        if isinstance(left, int) and isinstance(right, int):
+            return left == right
+        return math.isclose(float(left), float(right), rel_tol=1e-14, abs_tol=1e-14)
+    if isinstance(left, dict) and isinstance(right, dict):
+        return left.keys() == right.keys() and all(
+            _equivalent(left[key], right[key]) for key in left
+        )
+    if isinstance(left, list) and isinstance(right, list):
+        return len(left) == len(right) and all(
+            _equivalent(a, b) for a, b in zip(left, right)
+        )
+    return type(left) is type(right) and left == right
 
 
 def _read_json(path: str) -> dict:
@@ -57,7 +77,7 @@ def verify_experiment_artifact(directory: str) -> List[str]:
         records = load_attempts(os.path.join(directory, "attempts.jsonl"))
         committed = _read_json(os.path.join(directory, "summary.json"))
         recomputed = aggregate_attempts(records, manifest)
-        if committed != recomputed:
+        if not _equivalent(committed, recomputed):
             errors.append(f"{directory}: summary.json does not match attempts.jsonl")
         with open(os.path.join(directory, "report.md"), encoding="utf-8") as handle:
             report = handle.read()
