@@ -2,7 +2,7 @@
 
 [English](#luna) | [Chinese](#chinese-version)
 
-> Luna is a small coding agent built to study the full repair loop: inspect a repository,
+> Luna is a small coding agent built according to the full repair loop: inspect a repository,
 > edit source files, run tests, and use the failures to decide what to try next. A separate
 > harness checks the final result. The project includes a CLI, a local chat interface, a
 > controlled benchmark, and several pinned open-source repair cases.
@@ -59,7 +59,7 @@ flowchart TD
     repo --> loop
     subgraph agent["agent/"]
       loop["loop.py — ReAct cycle"] <-->|messages + tool_use| llm["llm.py → Claude<br/>(via gateway)"]
-      loop -->|tool calls| tools["tools.py: list_dir / read_file / search /<br/>edit_file / write_file / run_tests"]
+      loop -->|tool calls| tools["tools.py: list_dir / read_file / search /<br/>edit_file / write_file / apply_patch / run_tests"]
       tools --> sandbox["sandbox.py<br/>(path-confined workdir)"]
     end
     tools --> pytest["run_tests → pytest"]
@@ -144,8 +144,8 @@ repository repair. See the committed [report](eval/artifacts/multi_repo_v1/repor
   stops when the model quits calling tools (or a guardrail trips). Optional live streaming
   and embedding retrieval to seed context.
 - **The tools** (`agent/tools.py`) — `list_dir`, `read_file` (numbered lines), `search`
-  (literal grep), `edit_file` (unique-match string replace), `write_file`, `run_tests`
-  (pytest → compact PASS/FAIL). Every path is confined to the work directory by
+  (literal grep), `edit_file` (unique-match string replace), `write_file`, `apply_patch`
+  (checked unified diffs), `run_tests` (pytest → compact PASS/FAIL). Every path is confined to the work directory by
   `agent/sandbox.py`; errors come back as strings, never exceptions.
 - **The LLM seam** (`agent/llm.py`) — one thin wrapper over the Anthropic SDK (through an
   aggregation gateway), owning retries, streaming, and token/cost accounting. `agent/config.py`
@@ -258,7 +258,7 @@ point it only at repos you trust.
 ```text
 agent/            the agent itself
   loop.py           ReAct loop (run_agent) + optional retrieval
-  tools.py          list_dir / read_file / search / edit_file / write_file / run_tests
+  tools.py          list_dir / read_file / search / edit_file / write_file / apply_patch / run_tests
   sandbox.py        path confinement + per-task workspaces
   llm.py            Anthropic-via-gateway wrapper + token/cost accounting
   config.py         single knob panel (model, budgets, price table) + cost_of
@@ -311,7 +311,8 @@ real-repo orchestrator — none of it hits the gateway.
   proactively hunt for bugs when nothing is failing (no oracle → unverifiable).
 - **Structured verdicts are pytest-only.** Other runners work via `--test-cmd` but are judged
   by exit code alone (no per-test detail / regression breakdown).
-- Edits are exact string replacements (`edit_file`), not fuzzy / semantic patches.
+- Edits support exact string replacement and checked unified diffs, but not fuzzy or semantic
+  AST patches.
 - Real-repo and chat safety is git-based (clean tree + branch + diff) and localhost-only,
   **not** a container — run only on repos you trust (the test command executes arbitrary code).
 - Cost / latency depend on the aggregation gateway; it can't report output tokens under
@@ -329,7 +330,7 @@ MIT
 
 # 中文说明
 
-> Luna 是我根据 coding agent 工作机制而写的一个小型项目。它会读取仓库、修改源码、
+> Luna 是我根据 coding agent 工作机制写的一个小型项目。它会读取仓库、修改源码、
 > 运行测试，再根据失败信息继续调整。Agent 不负责给自己判分；运行结束后，评测脚本会
 > 恢复原始测试并检查回归。项目包含 CLI、本地聊天界面、受控任务集和真实开源项目案例。
 
@@ -367,7 +368,7 @@ flowchart TD
     repo --> loop
     subgraph agent["agent/"]
       loop["loop.py — ReAct 循环"] <-->|消息 + 工具调用| llm["llm.py → Claude<br/>通过聚合网关"]
-      loop -->|调用工具| tools["tools.py: list_dir / read_file / search /<br/>edit_file / write_file / run_tests"]
+      loop -->|调用工具| tools["tools.py: list_dir / read_file / search /<br/>edit_file / write_file / apply_patch / run_tests"]
       tools --> sandbox["sandbox.py<br/>工作目录路径限制"]
     end
     tools --> pytest["run_tests → pytest"]
@@ -528,7 +529,7 @@ python serve.py            # → http://127.0.0.1:8000
 ```text
 agent/            Agent 核心实现
   loop.py           ReAct 循环（run_agent）与可选检索
-  tools.py          list_dir / read_file / search / edit_file / write_file / run_tests
+  tools.py          list_dir / read_file / search / edit_file / write_file / apply_patch / run_tests
   sandbox.py        路径限制与逐任务临时工作区
   llm.py            Anthropic 聚合网关封装与 token/成本统计
   config.py         模型、预算、价格表和 cost_of 的集中配置
@@ -578,7 +579,7 @@ luna audit                # 重算实验汇总并检查真实案例元数据
 
 - Luna 依赖失败测试提供明确目标；测试全部通过时，它不会主动搜索其他潜在问题。
 - 只有 pytest 支持逐测试结果和回归检查。`--test-cmd` 只能根据退出码判断。
-- 编辑操作使用精确字符串替换，不支持模糊匹配或语义补丁。
+- 编辑操作支持精确字符串替换和先检查再应用的 unified diff，但不支持模糊匹配或 AST 语义补丁。
 - Git 检查和本地监听不能替代容器隔离，测试命令仍可以执行任意代码。
 - 当前网关在流式响应中不返回 output token，因此 `run` 和 `bench` 默认关闭流式输出以便统计成本。
 - 模型输出有随机性；同一任务重复运行时，步骤、token 和结果都可能变化。

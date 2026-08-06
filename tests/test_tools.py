@@ -1,6 +1,6 @@
 """agent/tools.py 的测试集。
 
-覆盖 TOOLS schema、六个工具各自的行为，以及 guarded_execute 的路径封闭和错误兜底。
+覆盖 TOOLS schema、七个工具各自的行为，以及 guarded_execute 的路径封闭和错误兜底。
 测试统一用 pytest 的 tmp_path 当 workdir；guarded_execute 的两个护栏标量以关键字传入，
 取值对齐 config 默认（run_tests_timeout_s=60 / max_tool_result_chars=8000）。
 """
@@ -10,6 +10,7 @@ import pytest
 
 from agent.tools import (
     TOOLS,
+    apply_patch,
     edit_file,
     guarded_execute,
     list_dir,  # noqa: F401
@@ -29,6 +30,7 @@ EXPECTED_TOOL_NAMES = {
     "search",
     "edit_file",
     "write_file",
+    "apply_patch",
     "run_tests",
 }
 EXPECTED_REQUIRED = {
@@ -37,6 +39,7 @@ EXPECTED_REQUIRED = {
     "search": {"query"},
     "edit_file": {"path", "old_string", "new_string"},
     "write_file": {"path", "content"},
+    "apply_patch": {"patch"},
     "run_tests": set(),
 }
 
@@ -44,8 +47,8 @@ EXPECTED_REQUIRED = {
 # ===========================================================================
 # TOOLS schema
 # ===========================================================================
-def test_tools_count_is_six():
-    assert len(TOOLS) == 6
+def test_tools_count_is_seven():
+    assert len(TOOLS) == 7
 
 
 def test_tools_names_match_handlers():
@@ -86,6 +89,7 @@ ESCAPE_CASES = [
     ("search", {"query": "x", "path": "../"}),
     ("edit_file", {"path": "../secret.txt", "old_string": "a", "new_string": "b"}),
     ("write_file", {"path": "../evil.txt", "content": "boom"}),
+    ("apply_patch", {"patch": "--- a/../evil.txt\n+++ b/../evil.txt\n@@ -1 +1 @@\n-a\n+b\n"}),
     ("run_tests", {"path": "../tests"}),
 ]
 
@@ -375,6 +379,162 @@ def test_write_file_target_is_dir_returns_error(tmp_path):
     assert out.startswith("错误：")
     assert "目录" in out
     assert (tmp_path / "d").is_dir()  # 目录未被破坏
+
+
+# ===========================================================================
+# apply_patch：标准 unified diff / 多 hunk / 护栏
+# ===========================================================================
+def test_apply_patch_multi_hunk_update(tmp_path):
+    f = tmp_path / "notes.txt"
+    f.write_text("one\ntwo\nthree\nfour\nfive\nsix\nseven\neight\n", encoding="utf-8")
+    patch = (
+        "--- a/notes.txt\n"
+        "+++ b/notes.txt\n"
+        "@@ -1,3 +1,3 @@\n"
+        " one\n"
+        "-two\n"
+        "+TWO\n"
+        " three\n"
+        "@@ -6,3 +6,3 @@\n"
+        " six\n"
+        "-seven\n"
+        "+SEVEN\n"
+        " eight\n"
+    )
+    out = apply_patch(str(tmp_path), patch)
+    assert not out.startswith("错误：")
+    assert f.read_text(encoding="utf-8") == "one\nTWO\nthree\nfour\nfive\nsix\nSEVEN\neight\n"
+
+
+def test_apply_patch_creates_new_file(tmp_path):
+    patch = (
+        "--- /dev/null\n"
+        "+++ b/pkg/new_mod.py\n"
+        "@@ -0,0 +1,2 @@\n"
+        "+VALUE = 1\n"
+        "+\n"
+    )
+    out = apply_patch(str(tmp_path), patch)
+    assert not out.startswith("错误：")
+    assert (tmp_path / "pkg" / "new_mod.py").read_text(encoding="utf-8") == "VALUE = 1\n\n"
+
+
+def test_apply_patch_rejects_non_applicable_patch_without_modifying(tmp_path):
+    f = tmp_path / "m.py"
+    f.write_text("x = 1\n", encoding="utf-8")
+    patch = (
+        "--- a/m.py\n"
+        "+++ b/m.py\n"
+        "@@ -1 +1 @@\n"
+        "-missing = 1\n"
+        "+x = 2\n"
+    )
+    out = apply_patch(str(tmp_path), patch)
+    assert out.startswith("错误：")
+    assert "无法应用" in out
+    assert f.read_text(encoding="utf-8") == "x = 1\n"
+
+
+def test_apply_patch_rejects_test_files(tmp_path):
+    tests = tmp_path / "tests"
+    tests.mkdir()
+    f = tests / "test_calc.py"
+    f.write_text("def test_x():\n    assert False\n", encoding="utf-8")
+    patch = (
+        "--- a/tests/test_calc.py\n"
+        "+++ b/tests/test_calc.py\n"
+        "@@ -1,2 +1,2 @@\n"
+        " def test_x():\n"
+        "-    assert False\n"
+        "+    assert True\n"
+    )
+    out = apply_patch(str(tmp_path), patch)
+    assert out.startswith("错误：")
+    assert "测试文件" in out
+    assert "assert False" in f.read_text(encoding="utf-8")
+
+
+def test_apply_patch_rejects_rename_smuggled_after_a_normal_hunk(tmp_path):
+    # 回归：rename 扩展头没有 ---/+++ 行，夹在正常 hunk 后面曾能把测试文件整个挪走。
+    (tmp_path / "mod.py").write_text("x = 1\n", encoding="utf-8")
+    tests = tmp_path / "tests"
+    tests.mkdir()
+    victim = tests / "test_calc.py"
+    victim.write_text("def test_x():\n    assert False\n", encoding="utf-8")
+    patch = (
+        "--- a/mod.py\n"
+        "+++ b/mod.py\n"
+        "@@ -1 +1 @@\n"
+        "-x = 1\n"
+        "+x = 2\n"
+        "diff --git a/tests/test_calc.py b/tests/test_calc.py.bak\n"
+        "similarity index 100%\n"
+        "rename from tests/test_calc.py\n"
+        "rename to tests/test_calc.py.bak\n"
+    )
+    out = apply_patch(str(tmp_path), patch)
+    assert out.startswith("错误：")
+    assert victim.exists()  # 测试文件原地未动
+    assert not (tests / "test_calc.py.bak").exists()
+    assert (tmp_path / "mod.py").read_text(encoding="utf-8") == "x = 1\n"  # 整个 patch 都没落盘
+
+
+def test_apply_patch_rejects_nested_test_dir(tmp_path):
+    # 回归：护栏曾只匹配根目录的 tests/，src/tests/ 一路放行。
+    nested = tmp_path / "src" / "tests"
+    nested.mkdir(parents=True)
+    f = nested / "helper.py"
+    f.write_text("HELPER = 1\n", encoding="utf-8")
+    patch = (
+        "--- a/src/tests/helper.py\n"
+        "+++ b/src/tests/helper.py\n"
+        "@@ -1 +1 @@\n"
+        "-HELPER = 1\n"
+        "+HELPER = 999\n"
+    )
+    out = apply_patch(str(tmp_path), patch)
+    assert out.startswith("错误：")
+    assert "测试文件" in out
+    assert f.read_text(encoding="utf-8") == "HELPER = 1\n"
+
+
+def test_apply_patch_ignores_diff_like_text_in_hunk_body(tmp_path):
+    # 回归：删除行 "-" + "-- a/x" 拼出 "--- a/x"，手写解析曾把正文当成文件头，
+    # 导致改一个含 SQL 注释的文件被误判成改测试。
+    f = tmp_path / "schema.sql"
+    f.write_text("SELECT 1;\n-- a/tests/test_x.py legacy note\nSELECT 2;\n", encoding="utf-8")
+    patch = (
+        "--- a/schema.sql\n"
+        "+++ b/schema.sql\n"
+        "@@ -1,3 +1,3 @@\n"
+        " SELECT 1;\n"
+        "--- a/tests/test_x.py legacy note\n"
+        "+-- a/tests/test_x.py updated note\n"
+        " SELECT 2;\n"
+    )
+    out = apply_patch(str(tmp_path), patch)
+    assert not out.startswith("错误：")
+    assert "1 个文件" in out  # 只报真实改动的那一个文件，不虚报
+    assert f.read_text(encoding="utf-8") == (
+        "SELECT 1;\n-- a/tests/test_x.py updated note\nSELECT 2;\n"
+    )
+
+
+def test_apply_patch_rejects_git_metadata(tmp_path):
+    git_dir = tmp_path / ".git"
+    git_dir.mkdir()
+    (git_dir / "config").write_text("[core]\n", encoding="utf-8")
+    patch = (
+        "--- a/.git/config\n"
+        "+++ b/.git/config\n"
+        "@@ -1 +1 @@\n"
+        "-[core]\n"
+        "+[evil]\n"
+    )
+    out = apply_patch(str(tmp_path), patch)
+    assert out.startswith("错误：")
+    assert ".git" in out
+    assert (git_dir / "config").read_text(encoding="utf-8") == "[core]\n"
 
 
 # ===========================================================================

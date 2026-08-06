@@ -1,4 +1,4 @@
-"""Luna 的「手」：6 个工具 handler、传给模型的 TOOLS schema，以及分发器 guarded_execute。
+"""Luna 的「手」：7 个工具 handler、传给模型的 TOOLS schema，以及分发器 guarded_execute。
 
 loop 每步拿到模型的 tool_use 请求后就在这里执行，结果为字符串，作为用户消息返回模型。
 """
@@ -20,6 +20,10 @@ NOISE_DIRS = {
     ".venv", "venv", "env", "node_modules", "dist", "build", ".eggs",
     ".idea", ".vscode", "htmlcov", ".next", "target",
 }
+# apply_patch 的两个标量护栏：patch 体积上限，以及 git apply 子进程的墙钟上限。
+MAX_PATCH_CHARS = 60_000
+GIT_APPLY_TIMEOUT_S = 30
+
 _BINARY_EXTS = {
     ".pyc", ".so", ".o", ".a", ".dylib", ".dll", ".exe", ".bin", ".zip",
     ".gz", ".tar", ".whl", ".png", ".jpg", ".jpeg", ".gif", ".pdf", ".ico",
@@ -33,8 +37,24 @@ def _in_git_dir(workdir: str, abs_path: str) -> bool:
     return rel == ".git" or rel.startswith(".git" + os.sep)
 
 
+def _is_test_path(path: str) -> bool:
+    """粗粒度识别测试文件路径，用于 apply_patch 的硬护栏。
+
+    按路径分量判断而非前缀，嵌套的 src/tests/、pkg/test/ 一样要拦住；宁可误伤也不放过。
+    """
+    rel = os.path.normpath(path).replace(os.sep, "/")
+    parts = rel.split("/")
+    base = parts[-1]
+    return (
+        any(part in ("tests", "test") for part in parts[:-1])
+        or base in ("tests", "test", "conftest.py")
+        or (base.startswith("test_") and base.endswith(".py"))
+        or base.endswith("_test.py")
+    )
+
+
 # ---------------------------------------------------------------------------
-# TOOLS —— 6 个 tool schema，直接传给 client.messages.create(tools=TOOLS, ...)。
+# TOOLS —— 7 个 tool schema，直接传给 client.messages.create(tools=TOOLS, ...)。
 # 每个是 {"name", "description", "input_schema"}，input_schema 是标准 JSON Schema，都带
 # "additionalProperties": false，描述用英文。
 # ---------------------------------------------------------------------------
@@ -162,6 +182,29 @@ TOOLS: list[dict] = [
         },
     },
     {
+        "name": "apply_patch",
+        "description": (
+            "Apply a standard unified diff inside the task workspace. Use this for multi-line "
+            "or multi-file edits after reading the relevant context. The patch is checked before "
+            "it is applied. It must not touch tests or .git metadata, and renames or copies are "
+            "rejected."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "patch": {
+                    "type": "string",
+                    "description": (
+                        "A standard unified diff, for example output shaped like "
+                        "'--- a/file.py', '+++ b/file.py', '@@ ...', then -/+ lines."
+                    ),
+                },
+            },
+            "required": ["patch"],
+            "additionalProperties": False,
+        },
+    },
+    {
         "name": "run_tests",
         "description": (
             "Run pytest inside the task workspace and report PASS/FAIL with a compact failure "
@@ -184,7 +227,7 @@ TOOLS: list[dict] = [
 
 
 # ---------------------------------------------------------------------------
-# 6 个工具 handler
+# 7 个工具 handler
 # ---------------------------------------------------------------------------
 def list_dir(workdir: str, path: str = ".") -> str:
     """列出 path 目录下的条目，字母序排列，目录名带尾部 /，过滤掉 __pycache__、.pyc、.git 之类的噪声。
@@ -384,6 +427,72 @@ def write_file(workdir: str, path: str, content: str) -> str:
     n_lines = len(content.splitlines())
     return f"已{'覆盖' if existed else '创建'} {path}（{n_bytes} 字节，{n_lines} 行）。"
 
+
+def _git_apply(workdir: str, patch: str, *args: str) -> subprocess.CompletedProcess:
+    """跑一次 git apply；args 决定是只探查还是真落盘。"""
+    return subprocess.run(
+        ["git", "apply", "--whitespace=nowarn", *args],
+        cwd=workdir,
+        input=patch,
+        capture_output=True,
+        text=True,
+        timeout=GIT_APPLY_TIMEOUT_S,
+    )
+
+
+def apply_patch(workdir: str, patch: str) -> str:
+    """先让 git 自己枚举 patch 会碰哪些文件，逐个过护栏，再真正落盘。
+
+    路径一律取自 git apply --numstat，不自己解析 ---/+++ 行：手写解析看不见
+    rename/copy/binary 这类扩展头，模型只要把改名操作夹在一个正常 hunk 后面，
+    就能把测试文件整个挪走而护栏毫无察觉。
+    """
+    if not patch or not patch.strip():
+        return "错误：patch 不能为空。"
+    if len(patch) > MAX_PATCH_CHARS:
+        return f"错误：patch 过长（{len(patch)} 字符），请拆成更小的补丁。"
+
+    # 一次 dry-run 拿三样东西：能不能应用（返回码）、会碰哪些文件（--numstat）、
+    # 有没有 rename/copy（--summary）。
+    probe = _git_apply(workdir, patch, "--check", "--numstat", "-z", "--summary")
+    if probe.returncode != 0:
+        detail = (probe.stderr or probe.stdout or "").strip()
+        return f"错误：patch 无法应用，未做修改。\n{detail[-2000:]}"
+
+    # --numstat -z 的记录以 NUL 结尾，--summary 的行以换行结尾且排在最后，
+    # 所以最后一个 NUL 之后剩下的就是 summary 块。
+    records, _, summary = probe.stdout.rpartition("\0")
+
+    # rename/copy 的两端在 --summary 里是 {a => b} 压缩写法，与其解析不如直接拒掉：
+    # 修 bug 让测试通过用不着改名，放行则等于给测试文件保护开后门。
+    for line in summary.splitlines():
+        if line.strip().split(" ", 1)[0] in ("rename", "copy"):
+            return (
+                "错误：apply_patch 不接受重命名/复制文件的 patch（会绕过测试文件保护）。"
+                "如需新建文件请用 write_file。"
+            )
+
+    paths = [rec.split("\t", 2)[2] for rec in records.split("\0") if rec]
+    if not paths:
+        return "错误：patch 没有产生任何文件改动。"
+
+    for path in paths:
+        abs_path = sandbox.resolve_in_workdir(workdir, path)
+        if _in_git_dir(workdir, abs_path):
+            return f"错误：拒绝修改 .git/ 内的文件：{path}"
+        if _is_test_path(path):
+            return f"错误：拒绝通过 apply_patch 修改测试文件：{path}"
+
+    applied = _git_apply(workdir, patch)
+    if applied.returncode != 0:
+        detail = (applied.stderr or applied.stdout or "").strip()
+        return f"错误：patch 应用失败，未做修改。\n{detail[-2000:]}"
+
+    listed = "\n".join(f"  - {path}" for path in paths[:20])
+    extra = f"\n  …（另有 {len(paths) - 20} 个）" if len(paths) > 20 else ""
+    return f"已应用 patch，涉及 {len(paths)} 个文件：\n{listed}{extra}"
+
+
 def run_tests(
     workdir: str,
     path: Optional[str] = None,
@@ -506,6 +615,7 @@ def guarded_execute(
         "search": search,
         "edit_file": edit_file,
         "write_file": write_file,
+        "apply_patch": apply_patch,
         "run_tests": run_tests,
     }
     # 1. 未知工具：立即拦下（防模型幻觉出不存在的工具）。
