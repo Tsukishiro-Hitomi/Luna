@@ -37,8 +37,8 @@ def _in_git_dir(workdir: str, abs_path: str) -> bool:
     return rel == ".git" or rel.startswith(".git" + os.sep)
 
 
-def _is_test_path(path: str) -> bool:
-    """粗粒度识别测试文件路径，用于 apply_patch 的硬护栏。
+def is_test_path(path: str) -> bool:
+    """粗粒度识别测试文件路径；apply_patch 和 run_repo 的反作弊共用这一份判断。
 
     按路径分量判断而非前缀，嵌套的 src/tests/、pkg/test/ 一样要拦住；宁可误伤也不放过。
     """
@@ -480,7 +480,7 @@ def apply_patch(workdir: str, patch: str) -> str:
         abs_path = sandbox.resolve_in_workdir(workdir, path)
         if _in_git_dir(workdir, abs_path):
             return f"错误：拒绝修改 .git/ 内的文件：{path}"
-        if _is_test_path(path):
+        if is_test_path(path):
             return f"错误：拒绝通过 apply_patch 修改测试文件：{path}"
 
     applied = _git_apply(workdir, patch)

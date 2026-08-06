@@ -11,6 +11,7 @@ from typing import List, Optional
 
 from agent.config import Config
 from agent.loop import run_agent
+from agent.tools import is_test_path
 from eval.run_bench import run_pytest, judge
 
 _PYENV = {**os.environ, "PYTHONDONTWRITEBYTECODE": "1"}
@@ -56,9 +57,13 @@ def _summary(outcomes: dict) -> dict:
     return s
 
 
-def _is_test_file(rel: str) -> bool:
-    b = os.path.basename(rel)
-    return (b.startswith("test_") and b.endswith(".py")) or b.endswith("_test.py") or b == "conftest.py"
+def _untracked(repo: str) -> List[str]:
+    """逐个列出未跟踪文件。
+
+    不用 `status --porcelain`：整个目录都是新建时它只折叠成一行 `?? tests/`，
+    看不到里面的文件。
+    """
+    return [p for p in _git(repo, "ls-files", "--others", "--exclude-standard").stdout.splitlines() if p]
 
 
 def _repo_pytest(repo: str, config: Config) -> dict:
@@ -138,6 +143,8 @@ def run_repo(repo_path: str, config: Config, *, task: Optional[str] = None,
                              message=f"建分支失败：{co.stderr.strip()}")
 
     # —— 跑 agent（workdir = 真实仓库；工具经 resolve_in_workdir 封闭在仓库内）——
+    # 先记下已有的未跟踪文件：--allow-dirty 时这些是用户自己的东西，收尾时绝不能删。
+    untracked_before = set(_untracked(repo))
     desc = _build_task(target, summary, mode, config, task)
     t0 = time.perf_counter()
     try:
@@ -148,11 +155,16 @@ def run_repo(repo_path: str, config: Config, *, task: Optional[str] = None,
                              wall_s=time.perf_counter() - t0, message=f"agent 出错：{e}")
     wall = time.perf_counter() - t0
 
-    # —— 反作弊：把 agent 改过的测试文件还原到 base_sha ——
-    changed = _git(repo, "diff", "--name-only").stdout.splitlines()
-    test_files = [p for p in changed if _is_test_file(p)]
+    # —— 反作弊：还原 agent 改过的测试文件，并删掉它新建的 ——
+    # 只还原 tracked 的不够：新塞一个未跟踪的 tests/conftest.py（autouse fixture 把被测
+    # 函数 monkeypatch 掉）不进 git diff，源码没修也能被判成 solved。
+    changed = _git(repo, "diff", "--name-only", base_sha).stdout.splitlines()
+    test_files = [p for p in changed if is_test_path(p)]
     if test_files:
         _git(repo, "checkout", base_sha, "--", *test_files)
+    for rel in sorted(set(_untracked(repo)) - untracked_before):
+        if is_test_path(rel):
+            os.remove(os.path.join(repo, rel))
 
     # —— 复判：就地复跑 + judge（零改动复用）——
     try:
@@ -165,8 +177,7 @@ def run_repo(repo_path: str, config: Config, *, task: Optional[str] = None,
     still = sorted(t for t in target if t not in passing_now)
 
     diff = _git(repo, "diff", base_sha).stdout
-    untracked = [ln[3:] for ln in _git(repo, "status", "--porcelain").stdout.splitlines()
-                 if ln.startswith("??")]
+    untracked = _untracked(repo)
 
     return RepoFixResult(
         status="solved" if solved else "unsolved", solved=solved, mode=mode,
